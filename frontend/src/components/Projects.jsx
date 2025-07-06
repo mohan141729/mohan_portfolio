@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaExternalLinkAlt, FaGithub, FaEye } from 'react-icons/fa';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -44,7 +45,7 @@ const Projects = () => {
     if (project.image && project.image.trim() !== '') {
       return (
         <img 
-          src={`${buildApiUrl('')}${project.image}`} 
+          src={getImageUrl(project.image)} 
           alt={project.title}
           className="w-full h-32 md:h-36 lg:h-40 object-cover rounded-t-2xl"
           onError={(e) => {

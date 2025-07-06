@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaExternalLinkAlt, FaCalendarAlt, FaBuilding } from 'react-icons/fa';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Certifications = () => {
   const [certifications, setCertifications] = useState([]);
@@ -139,7 +140,7 @@ const Certifications = () => {
               {certification.image && (
                 <div className="h-48 overflow-hidden">
                   <img
-                    src={`${buildApiUrl('')}${certification.image}`}
+                    src={getImageUrl(certification.image)}
                     alt={certification.name}
                     className="w-full h-full object-cover"
                   />

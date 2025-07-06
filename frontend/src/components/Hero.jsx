@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 // SVG icons for tech
 const icons = [
@@ -138,7 +139,7 @@ const Hero = () => {
   >
     {/* Background Image */}
     <img
-      src={content.background_image}
+      src={getImageUrl(content.background_image)}
       alt="Background"
       className="absolute inset-0 w-full h-full object-cover z-0"
       style={{ filter: 'brightness(0.7)' }}
@@ -188,7 +189,7 @@ const Hero = () => {
           <div className="relative mb-4">
             <span className="absolute -inset-2 md:-inset-4 lg:-inset-6 rounded-full bg-gradient-to-tr from-blue-400 via-purple-400 to-pink-400 blur-lg opacity-60"></span>
             <img
-              src={content.profile_image}
+              src={getImageUrl(content.profile_image)}
               alt={content.name}
               className="w-40 h-40 md:w-60 md:h-60 lg:w-72 lg:h-72 object-cover rounded-full border-4 md:border-8 border-white shadow-xl relative z-10"
             />

@@ -1024,17 +1024,22 @@ app.put('/api/hero', authenticateToken, upload.fields([
 ]), (req, res) => {
   const { name, title, subtitle, description, github_url, linkedin_url, welcome_text } = req.body;
   
+  // Get the base URL dynamically
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const baseUrl = `${protocol}://${host}`;
+  
   let query = 'UPDATE hero_content SET name = ?, title = ?, subtitle = ?, description = ?, github_url = ?, linkedin_url = ?, welcome_text = ?, updated_at = CURRENT_TIMESTAMP';
   let params = [name, title, subtitle, description, github_url, linkedin_url, welcome_text];
 
   if (req.files?.profile_image) {
     query += ', profile_image = ?';
-    params.push(`http://localhost:4000/uploads/${req.files.profile_image[0].filename}`);
+    params.push(`${baseUrl}/uploads/${req.files.profile_image[0].filename}`);
   }
 
   if (req.files?.background_image) {
     query += ', background_image = ?';
-    params.push(`http://localhost:4000/uploads/${req.files.background_image[0].filename}`);
+    params.push(`${baseUrl}/uploads/${req.files.background_image[0].filename}`);
   }
 
   db.run(query, params, function(err) {
