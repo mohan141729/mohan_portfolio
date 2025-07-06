@@ -1250,6 +1250,24 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
+// Stats endpoint for dashboard
+app.get('/api/stats', authenticateToken, (req, res) => {
+  const stats = {};
+  db.get('SELECT COUNT(*) as count FROM projects', (err, row) => {
+    stats.projects = row?.count || 0;
+    db.get('SELECT COUNT(*) as count FROM skills', (err, row) => {
+      stats.skills = row?.count || 0;
+      db.get('SELECT COUNT(*) as count FROM certifications', (err, row) => {
+        stats.certifications = row?.count || 0;
+        db.get('SELECT COUNT(*) as count FROM contact_messages', (err, row) => {
+          stats.messages = row?.count || 0;
+          res.json(stats);
+        });
+      });
+    });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
 }); 
