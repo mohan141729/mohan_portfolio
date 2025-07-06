@@ -53,15 +53,15 @@ const About = () => {
   const content = aboutContent || defaultAbout;
 
   return (
-  <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="about">
-    <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-12 tracking-tight">About Me</h2>
-    <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 px-4">
+  <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="about">
+    <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8 sm:mb-12 tracking-tight px-4">About Me</h2>
+    <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 mb-8 sm:mb-10 px-4 sm:px-6">
       {/* My Journey Card */}
-      <div className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-10 flex flex-col gap-4 border border-blue-100">
-        <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2"><span role="img" aria-label="rocket">🚀</span> {content.journey_title}</h3>
-        <ul className="text-gray-700 space-y-3 text-lg">
+      <div className="bg-white/70 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 flex flex-col gap-3 sm:gap-4 border border-blue-100">
+        <h3 className="text-xl sm:text-2xl font-bold text-blue-700 mb-3 sm:mb-4 flex items-center gap-2"><span role="img" aria-label="rocket">🚀</span> {content.journey_title}</h3>
+        <ul className="text-gray-700 space-y-2 sm:space-y-3 text-sm sm:text-base lg:text-lg">
           {content.journey_points.map((item, index) => (
-            <li key={index}>
+            <li key={index} className="leading-relaxed">
               {item.point ? (
                 <>
                   <span className="font-semibold">{item.point.split(':')[0]}:</span> {item.point.split(':').slice(1).join(':')}
@@ -74,22 +74,22 @@ const About = () => {
         </ul>
       </div>
       {/* Education Timeline Card */}
-      <div className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-10 border border-blue-100 flex flex-col">
-        <h3 className="text-2xl font-bold text-purple-700 mb-4 flex items-center gap-2"><span role="img" aria-label="graduation">🎓</span> {content.education_title}</h3>
-        <ol className="relative border-l-4 border-blue-200 ml-2 space-y-8 pl-6">
+      <div className="bg-white/70 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-blue-100 flex flex-col">
+        <h3 className="text-xl sm:text-2xl font-bold text-purple-700 mb-3 sm:mb-4 flex items-center gap-2"><span role="img" aria-label="graduation">🎓</span> {content.education_title}</h3>
+        <ol className="relative border-l-4 border-blue-200 ml-2 space-y-6 sm:space-y-8 pl-4 sm:pl-6">
           {content.education_items.map((item, index) => (
             <li key={index} className="relative">
-              <span className={`absolute -left-7 top-1 w-5 h-5 rounded-full border-4 border-white shadow ${index === content.education_items.length - 1 ? 'bg-purple-400' : 'bg-blue-400'}`}></span>
-              <span className="font-semibold">{item.institution}</span> <span className="text-gray-500">{item.details}</span>
+              <span className={`absolute -left-6 sm:-left-7 top-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-4 border-white shadow ${index === content.education_items.length - 1 ? 'bg-purple-400' : 'bg-blue-400'}`}></span>
+              <span className="font-semibold text-sm sm:text-base">{item.institution}</span> <span className="text-gray-500 text-sm sm:text-base">{item.details}</span>
           </li>
           ))}
         </ol>
       </div>
     </div>
     {/* Core Strengths Card */}
-    <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-blue-100 flex flex-col items-center">
-      <h3 className="text-xl font-bold text-green-700 mb-3 flex items-center gap-2"><span role="img" aria-label="bulb">💡</span> {content.strengths_title}</h3>
-      <ul className="text-gray-700 space-y-2 text-lg text-center">
+    <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border border-blue-100 flex flex-col items-center">
+      <h3 className="text-lg sm:text-xl font-bold text-green-700 mb-3 flex items-center gap-2"><span role="img" aria-label="bulb">💡</span> {content.strengths_title}</h3>
+      <ul className="text-gray-700 space-y-2 text-sm sm:text-base lg:text-lg text-center">
         {content.strengths_list.map((strength, index) => (
           <li key={index}>{strength}</li>
         ))}

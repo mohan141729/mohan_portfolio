@@ -212,350 +212,266 @@ const ProjectManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-xl border-r border-slate-200 shadow-xl">
-        <div className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Admin Panel
-            </h2>
-            <p className="text-sm text-slate-600">Project Management</p>
-          </div>
-          
-          <nav className="space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                    item.path === '/admin/projects'
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Project Management</h1>
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Manage your portfolio projects</p>
+        </div>
+        <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center"
+          >
+            <FaPlus size={16} />
+            Add Project
+          </button>
+        </div>
+      </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <button
-              onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 group w-full"
-            >
-              <FaSignOutAlt size={18} />
-              <span className="font-medium">Logout</span>
+      {/* Alerts */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
+              <FaTimes size={16} />
             </button>
-          </div>
-        </div>
-      </aside>
+          </motion.div>
+        )}
 
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Project Management</h1>
-              <p className="text-slate-600 text-lg">Manage your portfolio projects</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowForm(true);
-                }}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <FaPlus size={16} />
-                Add Project
-              </button>
-            </div>
-          </div>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{success}</span>
+            <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
+              <FaTimes size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Alerts */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center justify-between"
-              >
-                <span>{error}</span>
-                <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
+      {/* Project Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/20">
+              <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                    {editingProject ? 'Edit Project' : 'Add New Project'}
+                  </h2>
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+              </div>
 
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center justify-between"
-              >
-                <span>{success}</span>
-                <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Project Title *
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                      required
+                    />
+                  </div>
 
-          {/* Project Form Modal */}
-          <AnimatePresence>
-            {(() => {
-              console.log('Rendering modal section, showForm:', showForm);
-              return showForm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                  <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/20">
-                    <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                      <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-slate-800">
-                          {editingProject ? 'Edit Project' : 'Add New Project'}
-                        </h2>
-                        <button
-                          onClick={() => setShowForm(false)}
-                          className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
-                        >
-                          <FaTimes size={20} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Project Title *
-                          </label>
-                          <input
-                            type="text"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                            required
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Technologies
-                          </label>
-                          <input
-                            type="text"
-                            name="tech"
-                            value={formData.tech}
-                            onChange={handleInputChange}
-                            placeholder="React, Node.js, SQLite"
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Description
-                        </label>
-                        <textarea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleInputChange}
-                          rows={4}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Live Demo URL
-                          </label>
-                          <input
-                            type="url"
-                            name="live"
-                            value={formData.live}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            GitHub URL
-                          </label>
-                          <input
-                            type="url"
-                            name="github"
-                            value={formData.github}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Project Image
-                        </label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-purple-400 transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                            id="image-upload"
-                          />
-                          <label htmlFor="image-upload" className="cursor-pointer">
-                            {imagePreview ? (
-                              <div className="space-y-4">
-                                <img
-                                  src={imagePreview}
-                                  alt="Preview"
-                                  className="w-full h-48 object-cover rounded-lg mx-auto shadow-lg"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setImagePreview(null);
-                                    setFormData(prev => ({ ...prev, image: null }));
-                                  }}
-                                  className="text-red-600 hover:text-red-700 font-medium"
-                                >
-                                  Remove Image
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="space-y-4">
-                                <FaUpload className="mx-auto text-slate-400" size={48} />
-                                <p className="text-slate-600">Click to upload project image</p>
-                              </div>
-                            )}
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="featured"
-                          checked={formData.featured}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-slate-300 rounded"
-                        />
-                        <label className="ml-2 text-sm text-slate-700">
-                          Featured Project
-                        </label>
-                      </div>
-
-                      <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => setShowForm(false)}
-                          className="px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={submitting}
-                          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 flex items-center gap-2 shadow-lg hover:shadow-xl"
-                        >
-                          {submitting ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <FaCheck size={16} />
-                              {editingProject ? 'Update Project' : 'Create Project'}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </form>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Technologies
+                    </label>
+                    <input
+                      type="text"
+                      name="tech"
+                      value={formData.tech}
+                      onChange={handleInputChange}
+                      placeholder="React, Node.js, SQLite"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                    />
                   </div>
                 </div>
-              );
-            })()}
-          </AnimatePresence>
 
-          {/* Projects List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                {project.image && (
-                  <img
-                    src={`${buildApiUrl('')}${project.image}`}
-                    alt={project.title}
-                    className="w-full h-48 object-cover"
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                   />
-                )}
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-slate-800">{project.title}</h3>
-                    {project.featured && (
-                      <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-                        Featured
-                      </span>
-                    )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Live Demo URL
+                    </label>
+                    <input
+                      type="url"
+                      name="live"
+                      value={formData.live}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                    />
                   </div>
-                  <p className="text-slate-600 text-sm mb-4 line-clamp-3">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.tech && project.tech.map((tech, index) => (
-                      <span
-                        key={index}
-                        className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-lg border border-slate-200"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleEdit(project)}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                    >
-                      <FaEdit size={14} />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(project.id)}
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                    >
-                      <FaTrash size={14} />
-                      Delete
-                    </button>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      GitHub URL
+                    </label>
+                    <input
+                      type="url"
+                      name="github"
+                      value={formData.github}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                    />
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
 
-          {projects.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <FaProjectDiagram className="mx-auto text-slate-400" size={64} />
-              <h3 className="mt-4 text-lg font-medium text-slate-800">No projects yet</h3>
-              <p className="mt-2 text-slate-600">Get started by adding your first project.</p>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Project Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  />
+                  {imagePreview && (
+                    <div className="mt-3">
+                      <img src={imagePreview} alt="Preview" className="w-32 h-20 object-cover rounded-lg border" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="featured"
+                    checked={formData.featured}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                  />
+                  <label className="text-sm font-medium text-slate-700">
+                    Mark as Featured Project
+                  </label>
+                </div>
+
+                <div className="flex gap-3 sm:gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 px-4 sm:px-6 py-2 sm:py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-200 text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  >
+                    {submitting ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-        </div>
-      </main>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Projects List */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {projects.map((project) => (
+          <motion.div
+            key={project.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
+          >
+            {project.image && (
+              <div className="h-40 overflow-hidden">
+                <img
+                  src={`${buildApiUrl('')}${project.image}`}
+                  alt={project.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">{project.title}</h3>
+                {project.featured === 1 && (
+                  <span className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    Featured
+                  </span>
+                )}
+              </div>
+              
+              <p className="text-slate-600 text-sm sm:text-base mb-4 line-clamp-3">{project.description}</p>
+              
+              {project.tech && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Array.isArray(project.tech) ? project.tech.map((tech, index) => (
+                    <span key={index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
+                      {tech.trim()}
+                    </span>
+                  )) : project.tech.split(',').filter(Boolean).map((tech, index) => (
+                    <span key={index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
+                      {tech.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(project)}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                >
+                  <FaEdit size={14} className="inline mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(project.id)}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                >
+                  <FaTrash size={14} className="inline mr-1" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };

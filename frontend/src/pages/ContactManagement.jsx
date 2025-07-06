@@ -114,290 +114,209 @@ const ContactManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-xl border-r border-slate-200 shadow-xl">
-        <div className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Admin Panel
-            </h2>
-            <p className="text-sm text-slate-600">Contact Management</p>
-          </div>
-          
-          <nav className="space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                    item.path === '/admin/contact-info'
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <button
-              onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 group w-full"
-            >
-              <FaSignOutAlt size={18} />
-              <span className="font-medium">Logout</span>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Contact Information Management</h1>
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Update your contact details and social media links</p>
+        </div>
+      </div>
+      
+      {/* Alerts */}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-3 sm:p-4 rounded-xl flex items-center justify-between text-sm sm:text-base ${
+              message.includes('Error') 
+                ? 'bg-red-50 border border-red-200 text-red-700' 
+                : 'bg-green-50 border border-green-200 text-green-700'
+            }`}
+          >
+            <span>{message}</span>
+            <button onClick={() => setMessage('')} className="text-slate-400 hover:text-slate-600">
+              <FaTimes size={16} />
             </button>
-          </div>
-        </div>
-      </aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">Contact Information Management</h1>
-            <p className="text-slate-600 text-lg">Update your contact details and social media links</p>
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+        {/* Basic Information */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaEnvelope size={18} />
+              Basic Information
+            </h2>
           </div>
           
-          {/* Alerts */}
-          <AnimatePresence>
-            {message && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className={`mb-6 p-4 rounded-xl flex items-center justify-between ${
-                  message.includes('Error') 
-                    ? 'bg-red-50 border border-red-200 text-red-700' 
-                    : 'bg-green-50 border border-green-200 text-green-700'
-                }`}
-              >
-                <span>{message}</span>
-                <button onClick={() => setMessage('')} className="text-slate-400 hover:text-slate-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Information */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
-            >
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                  <FaEnvelope size={20} />
-                  Basic Information
-                </h2>
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={contactInfo.title}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="e.g., Get In Touch"
+                  required
+                />
               </div>
-              
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Section Title *
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={contactInfo.title}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="e.g., Get In Touch"
-                      required
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Subtitle *
-                    </label>
-                    <input
-                      type="text"
-                      name="subtitle"
-                      value={contactInfo.subtitle}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="e.g., Let's Connect"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={contactInfo.description}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Describe your passion and what you're currently working on..."
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Subtitle
+                </label>
+                <input
+                  type="text"
+                  name="subtitle"
+                  value={contactInfo.subtitle}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="e.g., Let's work together"
+                />
               </div>
-            </motion.div>
+            </div>
 
-            {/* Contact Details */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
-            >
-              <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                  <FaPhone size={20} />
-                  Contact Details
-                </h2>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={contactInfo.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base resize-none"
+                placeholder="Brief description about how people can reach you..."
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Contact Details */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaPhone size={18} />
+              Contact Details
+            </h2>
+          </div>
+          
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={contactInfo.email}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="your.email@example.com"
+                  required
+                />
               </div>
-              
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Location *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaMapMarkerAlt className="text-slate-400" size={16} />
-                      </div>
-                      <input
-                        type="text"
-                        name="location"
-                        value={contactInfo.location}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                        placeholder="e.g., Hyderabad, Telangana, India"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Email Address *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaEnvelope className="text-slate-400" size={16} />
-                      </div>
-                      <input
-                        type="email"
-                        name="email"
-                        value={contactInfo.email}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                        placeholder="e.g., your.email@example.com"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={contactInfo.location}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="e.g., New York, NY"
+                />
               </div>
-            </motion.div>
+            </div>
+          </div>
+        </motion.div>
 
-            {/* Social Media Links */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
-            >
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                  <FaLinkedin size={20} />
-                  Social Media Links
-                </h2>
+        {/* Social Links */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaGithub size={18} />
+              Social Media Links
+            </h2>
+          </div>
+          
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  GitHub URL
+                </label>
+                <input
+                  type="url"
+                  name="github_url"
+                  value={contactInfo.github_url}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="https://github.com/username"
+                />
               </div>
-              
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      GitHub URL *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaGithub className="text-slate-400" size={16} />
-                      </div>
-                      <input
-                        type="url"
-                        name="github_url"
-                        value={contactInfo.github_url}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                        placeholder="https://github.com/yourusername"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      LinkedIn URL *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FaLinkedin className="text-slate-400" size={16} />
-                      </div>
-                      <input
-                        type="url"
-                        name="linkedin_url"
-                        value={contactInfo.linkedin_url}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                        placeholder="https://linkedin.com/in/yourusername"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  LinkedIn URL
+                </label>
+                <input
+                  type="url"
+                  name="linkedin_url"
+                  value={contactInfo.linkedin_url}
+                  onChange={handleChange}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="https://linkedin.com/in/username"
+                />
               </div>
-            </motion.div>
+            </div>
+          </div>
+        </motion.div>
 
-            {/* Submit Button */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex justify-end pt-6"
-            >
-              <button
-                type="submit"
-                disabled={saving}
-                className={`px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-semibold hover:from-cyan-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                  saving ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {saving ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <FaCheck size={16} />
-                    Save Changes
-                  </div>
-                )}
-              </button>
-            </motion.div>
-          </form>
-        </div>
-      </main>
+        {/* Submit Button */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex justify-end"
+        >
+          <button
+            type="submit"
+            disabled={saving}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </motion.div>
+      </form>
     </div>
   );
 };

@@ -115,11 +115,11 @@ const Skills = () => {
 
   if (loading) {
     return (
-      <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Technical Skills</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl">A comprehensive overview of my technical expertise and proficiency levels.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8">
+      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">A comprehensive overview of my technical expertise and proficiency levels.</p>
+        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
             <div className="animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
               <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
@@ -133,11 +133,11 @@ const Skills = () => {
 
   if (error) {
     return (
-      <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Technical Skills</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl">A comprehensive overview of my technical expertise and proficiency levels.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8">
+      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">A comprehensive overview of my technical expertise and proficiency levels.</p>
+        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
             <p className="text-red-500 text-center">{error}</p>
           </div>
         </div>
@@ -156,39 +156,39 @@ const Skills = () => {
   }, {}) : {};
 
   return (
-    <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
-      <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Technical Skills</h2>
-      <p className="text-gray-400 text-center mb-12 max-w-2xl">A comprehensive overview of my technical expertise and proficiency levels.</p>
+    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
+      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">A comprehensive overview of my technical expertise and proficiency levels.</p>
       
-      <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
+      <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {Object.entries(skillsByCategory).map(([category, categorySkills], categoryIndex) => (
           <motion.div
             key={category}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: categoryIndex * 0.1 }}
-            className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8"
+            className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-2xl">{getCategoryIcon(category)}</span>
-              <h3 className="text-2xl font-bold text-gray-900">{category}</h3>
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <span className="text-xl sm:text-2xl">{getCategoryIcon(category)}</span>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{category}</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {categorySkills.map((skill, skillIndex) => (
                 <motion.div
                   key={skill.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: (categoryIndex * 0.1) + (skillIndex * 0.05) }}
-                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900">{skill.name}</h4>
-                    <span className="text-sm font-medium text-gray-600">{skill.proficiency}%</span>
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h4 className="text-base sm:text-lg font-semibold text-gray-900">{skill.name}</h4>
+                    <span className="text-xs sm:text-sm font-medium text-gray-600">{skill.proficiency}%</span>
                   </div>
                   
-                  <div className="mb-4">
+                  <div className="mb-3 sm:mb-4">
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <motion.div
                         className={`h-2 rounded-full bg-gradient-to-r ${getCategoryColor(category)}`}

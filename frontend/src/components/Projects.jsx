@@ -64,12 +64,12 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Featured Projects</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
+      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
+        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8">
+            <div key={i} className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
               <div className="animate-pulse">
                 <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
@@ -89,11 +89,11 @@ const Projects = () => {
 
   if (error) {
     return (
-      <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Featured Projects</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8">
+      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
+        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
             <div className="text-center">
               <div className="text-red-500 mb-4">
                 <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="mx-auto">
@@ -118,11 +118,11 @@ const Projects = () => {
 
   if (!Array.isArray(projects) || projects.length === 0) {
     return (
-      <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
-        <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Featured Projects</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-8">
+      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
+        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
             <div className="text-center">
               <div className="text-gray-400 mb-4">
                 <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="mx-auto">
@@ -145,10 +145,10 @@ const Projects = () => {
   const otherProjects = projects.filter(p => p.id !== featuredProject.id).slice(0, 2);
 
   return (
-    <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
-      <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Featured Projects</h2>
-      <p className="text-gray-400 text-center mb-12 max-w-2xl">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
-      <div className="w-full max-w-6xl flex flex-col gap-8 px-4">
+    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
+      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
+      <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {/* Featured Project */}
         {featuredProject && (
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300">
@@ -162,9 +162,9 @@ const Projects = () => {
                   Featured
                 </span>
               </div>
-              <div className="p-6 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-gray-900">{featuredProject.title}</h3>
+              <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{featuredProject.title}</h3>
                   <div className="flex gap-3">
                     {featuredProject.live && featuredProject.live !== '#' && (
                       <a 
@@ -190,7 +190,7 @@ const Projects = () => {
                     )}
                   </div>
                 </div>
-                <p className="text-gray-600 leading-relaxed">{featuredProject.description}</p>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{featuredProject.description}</p>
                 <div className="flex flex-wrap gap-2">
                   {featuredProject.tech && Array.isArray(featuredProject.tech) ? featuredProject.tech.map((tech, index) => (
                     <span 
@@ -215,7 +215,7 @@ const Projects = () => {
 
         {/* Other Projects */}
         {otherProjects.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {otherProjects.map((project) => (
               <div key={project.id} className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-300">
                 <div className="relative">
@@ -224,9 +224,9 @@ const Projects = () => {
                     {placeholderImg}
                   </div>
                 </div>
-                <div className="p-6 flex flex-col gap-4 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
+                <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">{project.title}</h3>
                     <div className="flex gap-3">
                       {project.live && project.live !== '#' && (
                         <a 
@@ -252,7 +252,7 @@ const Projects = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-600 leading-relaxed flex-1">{project.description}</p>
+                  <p className="text-gray-600 leading-relaxed flex-1 text-sm sm:text-base">{project.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {project.tech && Array.isArray(project.tech) ? project.tech.map((tech, index) => (
                       <span 

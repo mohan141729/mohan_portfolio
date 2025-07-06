@@ -174,278 +174,225 @@ const SkillManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-xl border-r border-slate-200 shadow-xl">
-        <div className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Admin Panel
-            </h2>
-            <p className="text-sm text-slate-600">Skill Management</p>
-          </div>
-          
-          <nav className="space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                    item.path === '/admin/skills'
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <button
-              onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 group w-full"
-            >
-              <FaSignOutAlt size={18} />
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Skill Management</h1>
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Manage your technical skills</p>
         </div>
-      </aside>
+        <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center"
+          >
+            <FaPlus size={16} />
+            Add Skill
+          </button>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Skill Management</h1>
-              <p className="text-slate-600 text-lg">Manage your technical skills</p>
-            </div>
-            <button
-              onClick={() => {
-                console.log('Add Skill button clicked');
-                console.log('Current showForm state:', showForm);
-                resetForm();
-                setShowForm(true);
-                console.log('After setShowForm(true)');
-              }}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              <FaPlus size={16} />
-              Add Skill
+      {/* Alerts */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
+              <FaTimes size={16} />
             </button>
-          </div>
+          </motion.div>
+        )}
 
-          {/* Alerts */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center justify-between"
-              >
-                <span>{error}</span>
-                <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{success}</span>
+            <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
+              <FaTimes size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center justify-between"
-              >
-                <span>{success}</span>
-                <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Skill Form Modal */}
-          <AnimatePresence>
-            {showForm && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        {editingSkill ? 'Edit Skill' : 'Add New Skill'}
-                      </h2>
-                      <button
-                        onClick={() => setShowForm(false)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <FaTimes size={20} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Skill Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Category
-                      </label>
-                      <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map(category => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Proficiency Level: {formData.proficiency}%
-                      </label>
-                      <input
-                        type="range"
-                        name="proficiency"
-                        min="0"
-                        max="100"
-                        value={formData.proficiency}
-                        onChange={handleInputChange}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Icon (optional)
-                      </label>
-                      <input
-                        type="text"
-                        name="icon"
-                        value={formData.icon}
-                        onChange={handleInputChange}
-                        placeholder="react, nodejs, python"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => setShowForm(false)}
-                        className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                      >
-                        {submitting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <FaCheck size={16} />
-                            {editingSkill ? 'Update Skill' : 'Create Skill'}
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
+      {/* Skill Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/20">
+              <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                    {editingSkill ? 'Edit Skill' : 'Add New Skill'}
+                  </h2>
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <FaTimes size={20} />
+                  </button>
                 </div>
               </div>
-            )}
-          </AnimatePresence>
 
-          {/* Skills List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {skills.map((skill) => (
-              <motion.div
-                key={skill.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                <div className="flex items-start justify-between mb-4">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-800">{skill.name}</h3>
-                    {skill.category && (
-                      <p className="text-sm text-slate-600">{skill.category}</p>
-                    )}
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Skill Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                      required
+                    />
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(skill)}
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Category *
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                      required
                     >
-                      <FaEdit size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(skill.id)}
-                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm text-slate-600 mb-2">
-                    <span className="font-medium">Proficiency</span>
-                    <span className="font-bold">{skill.proficiency}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300 shadow-sm"
-                      style={{ width: `${skill.proficiency}%` }}
-                    ></div>
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Icon (CSS Class)
+                  </label>
+                  <input
+                    type="text"
+                    name="icon"
+                    value={formData.icon}
+                    onChange={handleInputChange}
+                    placeholder="fab fa-react"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Proficiency Level: {formData.proficiency}%
+                  </label>
+                  <input
+                    type="range"
+                    name="proficiency"
+                    min="0"
+                    max="100"
+                    value={formData.proficiency}
+                    onChange={handleInputChange}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Expert</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 sm:gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 px-4 sm:px-6 py-2 sm:py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-200 text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  >
+                    {submitting ? 'Saving...' : (editingSkill ? 'Update Skill' : 'Create Skill')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Skills List */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {skills.map((skill) => (
+          <motion.div
+            key={skill.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
                 {skill.icon && (
-                  <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-lg inline-block">
-                    Icon: {skill.icon}
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                    <i className={`${skill.icon} text-white text-lg`}></i>
                   </div>
                 )}
-              </motion.div>
-            ))}
-          </div>
-
-          {skills.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <FaCode className="mx-auto text-slate-400" size={64} />
-              <h3 className="mt-4 text-lg font-medium text-slate-800">No skills yet</h3>
-              <p className="mt-2 text-slate-600">Get started by adding your first skill.</p>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-800">{skill.name}</h3>
+                  <p className="text-sm text-slate-600">{skill.category}</p>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </main>
+            
+            <div className="mb-4">
+              <div className="flex justify-between text-sm text-slate-600 mb-2">
+                <span>Proficiency</span>
+                <span>{skill.proficiency}%</span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${skill.proficiency}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(skill)}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+              >
+                <FaEdit size={14} className="inline mr-1" />
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(skill.id)}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+              >
+                <FaTrash size={14} className="inline mr-1" />
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };

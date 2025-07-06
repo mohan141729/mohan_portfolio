@@ -110,29 +110,29 @@ const HeroManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Hero Section Management</h1>
-          <p className="text-slate-600">Update your hero section content and images</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Hero Section Management</h1>
+          <p className="text-slate-600 text-sm sm:text-base">Update your hero section content and images</p>
         </div>
       </div>
       
       {message && (
-        <div className={`p-4 rounded-lg ${message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
+        <div className={`p-3 sm:p-4 rounded-lg text-sm sm:text-base ${message.includes('Error') ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
           {message}
         </div>
       )}
 
       <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
-          <h2 className="text-xl font-semibold text-white">Hero Content</h2>
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">Hero Content</h2>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Name *
@@ -142,7 +142,7 @@ const HeroManagement = () => {
                 name="name"
                 value={heroContent.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
                 placeholder="Enter your name"
                 required
               />
@@ -157,7 +157,7 @@ const HeroManagement = () => {
                 name="welcome_text"
                 value={heroContent.welcome_text}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
                 placeholder="Welcome message"
                 required
               />
@@ -172,7 +172,7 @@ const HeroManagement = () => {
                 name="subtitle"
                 value={heroContent.subtitle}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
                 placeholder="e.g., Hi, I'm John Doe"
                 required
               />
@@ -187,7 +187,7 @@ const HeroManagement = () => {
                 name="title"
                 value={heroContent.title}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
                 placeholder="e.g., Full-Stack Developer | AI/ML Enthusiast"
                 required
               />
@@ -202,8 +202,8 @@ const HeroManagement = () => {
                 name="github_url"
                 value={heroContent.github_url}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="https://github.com/yourusername"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
+                placeholder="https://github.com/username"
                 required
               />
             </div>
@@ -217,8 +217,8 @@ const HeroManagement = () => {
                 name="linkedin_url"
                 value={heroContent.linkedin_url}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                placeholder="https://linkedin.com/in/yourusername"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base"
+                placeholder="https://linkedin.com/in/username"
                 required
               />
             </div>
@@ -233,99 +233,52 @@ const HeroManagement = () => {
               name="description"
               value={heroContent.description}
               onChange={handleChange}
-              rows="4"
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+              rows={4}
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base resize-none"
               placeholder="Enter a compelling description about yourself..."
               required
             />
           </div>
 
           {/* Image Uploads */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-slate-700">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Profile Image
               </label>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
-                <input
-                  type="file"
-                  id="profile-image"
-                  accept="image/*"
-                  onChange={(e) => handleImageChange(e, 'profile')}
-                  className="hidden"
-                />
-                <label htmlFor="profile-image" className="cursor-pointer">
-                  <div className="space-y-2">
-                    <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-700">Upload Profile Image</p>
-                      <p className="text-xs text-slate-500">PNG, JPG up to 5MB</p>
-                    </div>
-                  </div>
-                </label>
-              </div>
-              {heroContent.profile_image && (
-                <div className="text-sm text-slate-600">
-                  <p>Current: {heroContent.profile_image}</p>
-                </div>
-              )}
+              <input
+                type="file"
+                id="profile-image"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e, 'profile')}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+              <p className="text-xs text-slate-500 mt-1">Recommended: Square image, 400x400px or larger</p>
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-slate-700">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Background Image
               </label>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
-                <input
-                  type="file"
-                  id="background-image"
-                  accept="image/*"
-                  onChange={(e) => handleImageChange(e, 'background')}
-                  className="hidden"
-                />
-                <label htmlFor="background-image" className="cursor-pointer">
-                  <div className="space-y-2">
-                    <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-700">Upload Background Image</p>
-                      <p className="text-xs text-slate-500">PNG, JPG up to 5MB</p>
-                    </div>
-                  </div>
-                </label>
-              </div>
-              {heroContent.background_image && (
-                <div className="text-sm text-slate-600">
-                  <p>Current: {heroContent.background_image}</p>
-                </div>
-              )}
+              <input
+                type="file"
+                id="background-image"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e, 'background')}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+              <p className="text-xs text-slate-500 mt-1">Recommended: Landscape image, 1920x1080px or larger</p>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end pt-6 border-t border-slate-200">
+          <div className="flex justify-end pt-4">
             <button
               type="submit"
               disabled={saving}
-              className={`px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 ${
-                saving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg transform hover:scale-105'
-              }`}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
-              {saving ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Saving...
-                </div>
-              ) : (
-                'Save Changes'
-              )}
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

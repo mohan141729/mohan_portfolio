@@ -114,77 +114,77 @@ const Contact = () => {
   }
 
   return (
-  <section className="py-20 bg-white" id="contact">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{contactInfo?.title || 'Get In Touch'}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+  <section className="py-16 sm:py-20 bg-white" id="contact">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 sm:mb-4 px-4">{contactInfo?.title || 'Get In Touch'}</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base px-4">
             I'm always open to discussing new opportunities and interesting projects. 
             Feel free to reach out if you'd like to collaborate or just want to say hello!
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
           {/* Contact Information */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">{contactInfo?.subtitle || "Let's Connect"}</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{contactInfo?.subtitle || "Let's Connect"}</h3>
+              <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
                 {contactInfo?.description || 'I\'m passionate about creating innovative web solutions and exploring the frontiers of artificial intelligence. Currently building full-stack applications with modern technologies.'}
               </p>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FaMapMarkerAlt className="text-blue-600" size={20} />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                  <FaMapMarkerAlt className="text-blue-600" size={18} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Location</p>
-                  <p className="text-gray-600">{contactInfo?.location || 'Hyderabad, Telangana, India'}</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">Location</p>
+                  <p className="text-gray-600 text-sm sm:text-base">{contactInfo?.location || 'Hyderabad, Telangana, India'}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <FaEnvelope className="text-green-600" size={20} />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+                  <FaEnvelope className="text-green-600" size={18} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Email</p>
-                  <a href={`mailto:${contactInfo?.email || 'mohan.developer@gmail.com'}`} className="text-blue-600 hover:text-blue-700">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">Email</p>
+                  <a href={`mailto:${contactInfo?.email || 'mohan.developer@gmail.com'}`} className="text-blue-600 hover:text-blue-700 text-sm sm:text-base">
                     {contactInfo?.email || 'mohan.developer@gmail.com'}
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gray-100 rounded-lg">
-                  <FaGithub className="text-gray-600" size={20} />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
+                  <FaGithub className="text-gray-600" size={18} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">GitHub</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">GitHub</p>
                   <a 
                     href={contactInfo?.github_url || 'https://github.com/mohan-d'} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700 text-sm sm:text-base"
                   >
                     {contactInfo?.github_url ? contactInfo.github_url.replace('https://', '') : 'github.com/mohan-d'}
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <FaLinkedin className="text-blue-600" size={20} />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                  <FaLinkedin className="text-blue-600" size={18} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">LinkedIn</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">LinkedIn</p>
                   <a 
                     href={contactInfo?.linkedin_url || 'https://linkedin.com/in/mohan-d'} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700 text-sm sm:text-base"
                   >
                     {contactInfo?.linkedin_url ? contactInfo.linkedin_url.replace('https://', '') : 'linkedin.com/in/mohan-d'}
                   </a>
@@ -194,14 +194,14 @@ const Contact = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="bg-gray-50 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Send a Message</h3>
+          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Send a Message</h3>
             
             {success && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center gap-2"
+                className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center gap-2 text-sm sm:text-base"
               >
                 <FaCheckCircle />
                 Message sent successfully! I'll get back to you soon.
@@ -212,15 +212,15 @@ const Contact = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center gap-2"
+                className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center gap-2 text-sm sm:text-base"
               >
                 <FaExclamationTriangle />
                 {error}
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Your Name *
@@ -231,7 +231,7 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                     placeholder="John Doe"
                   />
                 </div>
@@ -246,7 +246,7 @@ const Contact = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -261,7 +261,7 @@ const Contact = () => {
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                   placeholder="Project collaboration, job opportunity, etc."
                 />
               </div>
@@ -275,8 +275,8 @@ const Contact = () => {
                   value={formData.message}
                   onChange={handleInputChange}
                   required
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  rows={5}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-sm sm:text-base"
                   placeholder="Tell me about your project or how I can help you..."
                 />
               </div>
@@ -284,11 +284,11 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {submitting ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
                     Sending Message...
       </div>
                 ) : (

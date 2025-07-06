@@ -192,216 +192,183 @@ const ResumeManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-xl border-r border-slate-200 shadow-xl">
-        <div className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Admin Panel
-            </h2>
-            <p className="text-sm text-slate-600">Resume Management</p>
-          </div>
-          
-          <nav className="space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                    item.path === '/admin/resume'
-                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold shadow-lg'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <button
-              onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 group w-full"
-            >
-              <FaSignOutAlt size={18} />
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">Resume Management</h1>
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Upload and manage your resume/CV</p>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-800 mb-2">Resume Management</h1>
-              <p className="text-slate-600 text-lg">Upload and manage your resume/CV</p>
-            </div>
-            <Link
-              to="/"
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              <FaFileAlt size={16} />
-              Back to Portfolio
-            </Link>
-          </div>
+      {/* Alerts */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
+              <FaTimes size={16} />
+            </button>
+          </motion.div>
+        )}
 
-          {/* Alerts */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center justify-between"
-              >
-                <span>{error}</span>
-                <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center justify-between text-sm sm:text-base"
+          >
+            <span>{success}</span>
+            <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
+              <FaTimes size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 flex items-center justify-between"
-              >
-                <span>{success}</span>
-                <button onClick={() => setSuccess('')} className="text-green-400 hover:text-green-600">
-                  <FaTimes size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {resume ? (
-            /* Current Resume Display */
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl">
-                  <FaFileAlt className="text-white" size={20} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Current Resume</h2>
-                  <p className="text-slate-600">Your uploaded resume file</p>
-                </div>
+      {/* Upload Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+      >
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 sm:px-6 py-3 sm:py-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+            <FaFileAlt size={18} />
+            Upload Resume
+          </h2>
+        </div>
+        
+        <div className="p-4 sm:p-6">
+          <div
+            className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center transition-all duration-200 ${
+              dragActive 
+                ? 'border-teal-400 bg-teal-50' 
+                : 'border-slate-300 hover:border-teal-400 hover:bg-slate-50'
+            }`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <div className="space-y-4">
+              <div className="mx-auto w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
+                <FaUpload className="text-teal-600" size={24} />
               </div>
-
-              <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200">
-                <div className="flex items-center gap-4">
-                  {getFileIcon(resume.filename)}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-800 text-lg">{resume.filename}</h3>
-                    <p className="text-slate-600 text-sm">
-                      Size: {formatFileSize(resume.size)} • Uploaded: {new Date(resume.uploaded_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <a
-                      href={`${buildApiUrl('')}${resume.file_path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                      title="View Resume"
-                    >
-                      <FaEye size={16} />
-                    </a>
-                    <a
-                      href={`${buildApiUrl('')}${resume.file_path}`}
-                      download
-                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                      title="Download Resume"
-                    >
-                      <FaDownload size={16} />
-                    </a>
-                    <button
-                      onClick={handleDelete}
-                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                      title="Delete Resume"
-                    >
-                      <FaTrash size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <h4 className="font-semibold text-blue-800 mb-2">Upload New Resume</h4>
-                <p className="text-blue-600 text-sm">
-                  Upload a new file to replace your current resume. Supported formats: PDF, DOC, DOCX, JPG, PNG (max 5MB)
+              <div>
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-2">
+                  Upload your resume
+                </h3>
+                <p className="text-sm sm:text-base text-slate-600 mb-4">
+                  Drag and drop your resume file here, or click to browse
+                </p>
+                <p className="text-xs text-slate-500 mb-4">
+                  Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB)
                 </p>
               </div>
-            </div>
-          ) : (
-            /* Upload Area */
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl">
-                  <FaUpload className="text-white" size={20} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Upload Resume</h2>
-                  <p className="text-slate-600">Upload your resume or CV file</p>
-                </div>
-              </div>
-
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-                  dragActive 
-                    ? 'border-teal-400 bg-teal-50' 
-                    : 'border-slate-300 bg-gradient-to-r from-slate-50 to-slate-100'
-                }`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
+              
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="resume-upload"
+                disabled={uploading}
+              />
+              <label
+                htmlFor="resume-upload"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="resume-upload"
-                />
-                <label htmlFor="resume-upload" className="cursor-pointer">
-                  <div className="space-y-4">
-                    <div className="w-16 h-16 bg-gradient-to-r from-teal-100 to-teal-200 rounded-full flex items-center justify-center mx-auto">
-                      <FaUpload className="text-teal-500" size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                        {dragActive ? 'Drop your resume here' : 'Click to upload or drag and drop'}
-                      </h3>
-                      <p className="text-slate-600 mb-4">
-                        Supported formats: PDF, DOC, DOCX, JPG, PNG
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        Maximum file size: 5MB
-                      </p>
-                    </div>
-                  </div>
-                </label>
-              </div>
-
-              {uploading && (
-                <div className="mt-6 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
-                  <p className="mt-2 text-slate-600">Uploading resume...</p>
-                </div>
-              )}
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <FaUpload size={16} />
+                    Choose File
+                  </>
+                )}
+              </label>
             </div>
-          )}
+          </div>
         </div>
-      </main>
+      </motion.div>
+
+      {/* Current Resume */}
+      {resume && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaEye size={18} />
+              Current Resume
+            </h2>
+          </div>
+          
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+              <div className="flex items-center gap-4">
+                {getFileIcon(resume.filename)}
+                <div>
+                  <h3 className="font-semibold text-slate-800 text-sm sm:text-base">{resume.filename}</h3>
+                  <p className="text-sm text-slate-600">
+                    Size: {formatFileSize(resume.size)} | Uploaded: {new Date(resume.upload_date).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <a
+                  href={`${buildApiUrl('')}${resume.file_path}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                >
+                  <FaDownload size={12} className="inline mr-1" />
+                  Download
+                </a>
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                >
+                  <FaTrash size={12} className="inline mr-1" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* No Resume State */}
+      {!resume && !loading && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-center py-8 sm:py-12"
+        >
+          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FaFileAlt className="text-slate-400" size={32} />
+          </div>
+          <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-2">No resume uploaded</h3>
+          <p className="text-sm sm:text-base text-slate-600">
+            Upload your resume to make it available for download on your portfolio.
+          </p>
+        </motion.div>
+      )}
     </div>
   );
 };
