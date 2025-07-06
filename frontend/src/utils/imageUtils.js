@@ -8,8 +8,13 @@ import { buildApiUrl } from '../config/api';
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   
-  // If it's already a full URL, return it as is
+  // If it's already a full URL, check if it's localhost and convert
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // If it's a localhost URL, convert it to production URL
+    if (imagePath.includes('localhost:4000')) {
+      const filename = imagePath.split('/').pop(); // Get the filename
+      return `${buildApiUrl('')}/uploads/${filename}`;
+    }
     return imagePath;
   }
   
@@ -44,4 +49,17 @@ export const isValidImageUrl = (imageUrl) => {
  */
 export const getFallbackImageUrl = () => {
   return '/placeholder-image.jpg'; // You can add a placeholder image to your public folder
+};
+
+/**
+ * Debug function to log image URL conversion
+ * @param {string} originalPath - The original image path
+ * @param {string} convertedUrl - The converted URL
+ */
+export const debugImageUrl = (originalPath, convertedUrl) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🖼️ Image URL Debug:');
+    console.log('  Original:', originalPath);
+    console.log('  Converted:', convertedUrl);
+  }
 }; 
