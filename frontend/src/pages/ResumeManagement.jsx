@@ -47,6 +47,10 @@ const ResumeManagement = () => {
         const data = await response.json();
         console.log('Resume data:', data);
         setResume(data);
+      } else if (response.status === 401) {
+        setResume(null);
+        setError('You are not authorized. Please log in as admin.');
+        alert('You are not authorized. Please log in as admin.');
       } else if (response.status === 404) {
         console.log('No resume found (404)');
         setResume(null);
@@ -127,6 +131,9 @@ const ResumeManagement = () => {
       if (response.ok) {
         setSuccess('Resume uploaded successfully!');
         fetchResume();
+      } else if (response.status === 401) {
+        setError('You are not authorized. Please log in as admin.');
+        alert('You are not authorized. Please log in as admin.');
       } else {
         setError(data.error || 'Failed to upload resume');
       }

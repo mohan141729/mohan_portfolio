@@ -30,6 +30,9 @@ const Admin = () => {
           const data = await response.json();
           console.log('Stats data:', data);
           setStats(data);
+        } else if (response.status === 401) {
+          setStats({ projects: '-', skills: '-', certifications: '-', messages: '-' });
+          alert('You are not authorized. Please log in as admin.');
         } else {
           const errorData = await response.json().catch(() => ({}));
           console.error('Failed to fetch stats:', errorData);
