@@ -69,10 +69,11 @@ const Skills = () => {
         throw new Error('Failed to fetch skills');
       }
       const data = await response.json();
-      setSkills(data);
+      setSkills(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching skills:', err);
       setError('Failed to load skills');
+      setSkills([]);
     } finally {
       setLoading(false);
     }
@@ -145,14 +146,14 @@ const Skills = () => {
   }
 
   // Group skills by category
-  const skillsByCategory = skills.reduce((acc, skill) => {
+  const skillsByCategory = Array.isArray(skills) ? skills.reduce((acc, skill) => {
     const category = skill.category || 'Other';
     if (!acc[category]) {
       acc[category] = [];
     }
     acc[category].push(skill);
     return acc;
-  }, {});
+  }, {}) : {};
 
   return (
     <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
@@ -210,7 +211,7 @@ const Skills = () => {
         ))}
       </div>
 
-      {skills.length === 0 && (
+      {(!Array.isArray(skills) || skills.length === 0) && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔧</div>
           <h3 className="text-xl font-medium text-gray-900 mb-2">No skills available</h3>

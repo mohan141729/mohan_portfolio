@@ -142,7 +142,9 @@ const ResumeManagement = () => {
   };
 
   const getFileIcon = (filename) => {
-    const extension = filename.split('.').pop().toLowerCase();
+    if (!filename) return <FaFileAlt className="text-gray-500" size={24} />;
+    
+    const extension = filename.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
         return <FaFilePdf className="text-red-500" size={24} />;

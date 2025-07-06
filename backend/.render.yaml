@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: mohan-portfolio-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install && npm run postinstall && npm run setup
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/backend
+      sizeGB: 1 

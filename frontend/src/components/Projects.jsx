@@ -18,10 +18,11 @@ const Projects = () => {
         throw new Error('Failed to fetch projects');
       }
       const data = await response.json();
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError('Failed to load projects');
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ const Projects = () => {
     );
   }
 
-  if (!projects || projects.length === 0) {
+  if (!Array.isArray(projects) || projects.length === 0) {
     return (
       <section className="py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
         <h2 className="text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight">Featured Projects</h2>
@@ -190,14 +191,21 @@ const Projects = () => {
                 </div>
                 <p className="text-gray-600 leading-relaxed">{featuredProject.description}</p>
                 <div className="flex flex-wrap gap-2">
-                  {featuredProject.tech && Array.isArray(featuredProject.tech) && featuredProject.tech.map((tech, index) => (
+                  {featuredProject.tech && Array.isArray(featuredProject.tech) ? featuredProject.tech.map((tech, index) => (
                     <span 
                       key={index} 
                       className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
                     >
                       {tech.trim()}
                     </span>
-                  ))}
+                  )) : (featuredProject.tech ? featuredProject.tech.split(',').filter(Boolean).map((tech, index) => (
+                    <span 
+                      key={index} 
+                      className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
+                    >
+                      {tech.trim()}
+                    </span>
+                  )) : [])}
                 </div>
               </div>
             </div>
@@ -245,14 +253,21 @@ const Projects = () => {
                   </div>
                   <p className="text-gray-600 leading-relaxed flex-1">{project.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    {project.tech && Array.isArray(project.tech) && project.tech.map((tech, index) => (
+                    {project.tech && Array.isArray(project.tech) ? project.tech.map((tech, index) => (
                       <span 
                         key={index} 
                         className="bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 text-xs font-semibold px-3 py-1 rounded-md border border-gray-200"
                       >
                         {tech.trim()}
                       </span>
-                    ))}
+                    )) : (project.tech ? project.tech.split(',').filter(Boolean).map((tech, index) => (
+                      <span 
+                        key={index} 
+                        className="bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 text-xs font-semibold px-3 py-1 rounded-md border border-gray-200"
+                      >
+                        {tech.trim()}
+                      </span>
+                    )) : [])}
                   </div>
                 </div>
               </div>

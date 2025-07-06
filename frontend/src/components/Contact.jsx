@@ -33,10 +33,15 @@ const Contact = () => {
       const response = await fetch(buildApiUrl(ENDPOINTS.PUBLIC_CONTACT));
       if (response.ok) {
         const data = await response.json();
-        setContactInfo(data);
+        // Merge with default values to ensure all fields exist
+        setContactInfo(prev => ({
+          ...prev,
+          ...data
+        }));
       }
     } catch (err) {
       console.error('Error fetching contact info:', err);
+      // Keep default values if API call fails
     } finally {
       setLoading(false);
     }
@@ -112,7 +117,7 @@ const Contact = () => {
   <section className="py-20 bg-white" id="contact">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{contactInfo.title}</h2>
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{contactInfo?.title || 'Get In Touch'}</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             I'm always open to discussing new opportunities and interesting projects. 
             Feel free to reach out if you'd like to collaborate or just want to say hello!
@@ -123,9 +128,9 @@ const Contact = () => {
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">{contactInfo.subtitle}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">{contactInfo?.subtitle || "Let's Connect"}</h3>
               <p className="text-gray-600 mb-6">
-                {contactInfo.description}
+                {contactInfo?.description || 'I\'m passionate about creating innovative web solutions and exploring the frontiers of artificial intelligence. Currently building full-stack applications with modern technologies.'}
               </p>
             </div>
 
@@ -136,7 +141,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Location</p>
-                  <p className="text-gray-600">{contactInfo.location}</p>
+                  <p className="text-gray-600">{contactInfo?.location || 'Hyderabad, Telangana, India'}</p>
                 </div>
               </div>
 
@@ -146,8 +151,8 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Email</p>
-                  <a href={`mailto:${contactInfo.email}`} className="text-blue-600 hover:text-blue-700">
-                    {contactInfo.email}
+                  <a href={`mailto:${contactInfo?.email || 'mohan.developer@gmail.com'}`} className="text-blue-600 hover:text-blue-700">
+                    {contactInfo?.email || 'mohan.developer@gmail.com'}
                   </a>
                 </div>
               </div>
@@ -159,12 +164,12 @@ const Contact = () => {
                 <div>
                   <p className="font-medium text-gray-900">GitHub</p>
                   <a 
-                    href={contactInfo.github_url} 
+                    href={contactInfo?.github_url || 'https://github.com/mohan-d'} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700"
                   >
-                    {contactInfo.github_url.replace('https://', '')}
+                    {contactInfo?.github_url ? contactInfo.github_url.replace('https://', '') : 'github.com/mohan-d'}
                   </a>
                 </div>
               </div>
@@ -176,12 +181,12 @@ const Contact = () => {
                 <div>
                   <p className="font-medium text-gray-900">LinkedIn</p>
                   <a 
-                    href={contactInfo.linkedin_url} 
+                    href={contactInfo?.linkedin_url || 'https://linkedin.com/in/mohan-d'} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700"
                   >
-                    {contactInfo.linkedin_url.replace('https://', '')}
+                    {contactInfo?.linkedin_url ? contactInfo.linkedin_url.replace('https://', '') : 'linkedin.com/in/mohan-d'}
                   </a>
                 </div>
               </div>

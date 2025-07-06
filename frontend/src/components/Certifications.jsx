@@ -21,10 +21,11 @@ const Certifications = () => {
         throw new Error('Failed to fetch certifications');
       }
       const data = await response.json();
-      setCertifications(data);
+      setCertifications(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching certifications:', err);
       setError('Failed to load certifications');
+      setCertifications([]);
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ const Certifications = () => {
 
         {/* Certifications Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {certifications.map((certification, index) => (
+          {Array.isArray(certifications) && certifications.map((certification, index) => (
             <motion.div
               key={certification.id}
               initial={{ opacity: 0, y: 20 }}
@@ -200,7 +201,7 @@ const Certifications = () => {
           ))}
         </div>
 
-        {certifications.length === 0 && (
+        {(!Array.isArray(certifications) || certifications.length === 0) && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🏆</div>
             <h3 className="text-xl font-medium text-gray-900 mb-2">No certifications available</h3>

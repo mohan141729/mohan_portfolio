@@ -3,35 +3,6 @@ const API_CONFIG = {
   // Base URL for API calls
   BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
   
-  // API endpoints
-  ENDPOINTS: {
-    // Auth endpoints
-    LOGIN: '/api/admin/login',
-    LOGOUT: '/api/admin/logout',
-    
-    // Public endpoints
-    PUBLIC_HERO: '/api/public/hero',
-    PUBLIC_ABOUT: '/api/public/about',
-    PUBLIC_CONTACT: '/api/public/contact',
-    PUBLIC_PROJECTS: '/api/projects',
-    PUBLIC_SKILLS: '/api/skills',
-    PUBLIC_CERTIFICATIONS: '/api/certifications',
-    PUBLIC_RESUME: '/api/public/resume',
-    
-    // Protected endpoints
-    HERO: '/api/hero',
-    ABOUT: '/api/about',
-    CONTACT_INFO: '/api/contact-info',
-    PROJECTS: '/api/projects',
-    SKILLS: '/api/skills',
-    CERTIFICATIONS: '/api/certifications',
-    RESUME: '/api/resume',
-    CONTACT_MESSAGES: '/api/contact',
-    
-    // Contact form submission
-    CONTACT_SUBMIT: '/api/contact',
-  },
-  
   // Request configuration
   REQUEST_CONFIG: {
     credentials: 'include',
@@ -39,6 +10,35 @@ const API_CONFIG = {
       'Content-Type': 'application/json',
     },
   },
+};
+
+// API endpoints
+export const ENDPOINTS = {
+  // Auth endpoints
+  LOGIN: '/api/admin/login',
+  LOGOUT: '/api/admin/logout',
+  
+  // Public endpoints
+  PUBLIC_HERO: '/api/public/hero',
+  PUBLIC_ABOUT: '/api/public/about',
+  PUBLIC_CONTACT: '/api/public/contact',
+  PUBLIC_PROJECTS: '/api/projects',
+  PUBLIC_SKILLS: '/api/skills',
+  PUBLIC_CERTIFICATIONS: '/api/certifications',
+  PUBLIC_RESUME: '/api/public/resume',
+  
+  // Protected endpoints
+  HERO: '/api/hero',
+  ABOUT: '/api/about',
+  CONTACT_INFO: '/api/contact-info',
+  PROJECTS: '/api/projects',
+  SKILLS: '/api/skills',
+  CERTIFICATIONS: '/api/certifications',
+  RESUME: '/api/resume',
+  CONTACT_MESSAGES: '/api/contact',
+  
+  // Contact form submission
+  CONTACT_SUBMIT: '/api/contact',
 };
 
 // Helper function to build full API URL

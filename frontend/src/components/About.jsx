@@ -61,7 +61,15 @@ const About = () => {
         <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2"><span role="img" aria-label="rocket">🚀</span> {content.journey_title}</h3>
         <ul className="text-gray-700 space-y-3 text-lg">
           {content.journey_points.map((item, index) => (
-            <li key={index}><span className="font-semibold">{item.point.split(':')[0]}:</span> {item.point.split(':').slice(1).join(':')}</li>
+            <li key={index}>
+              {item.point ? (
+                <>
+                  <span className="font-semibold">{item.point.split(':')[0]}:</span> {item.point.split(':').slice(1).join(':')}
+                </>
+              ) : (
+                <span>No content available</span>
+              )}
+            </li>
           ))}
         </ul>
       </div>
