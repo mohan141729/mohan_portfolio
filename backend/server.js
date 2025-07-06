@@ -15,7 +15,12 @@ const PORT = process.env.PORT || 4000;
 // Improved CORS configuration with better debugging
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
+  : [
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'http://127.0.0.1:5173',
+    'https://mohan-portfolio-chi.vercel.app' // Add your Vercel frontend domain here
+  ];
 
 console.log('CORS Configuration:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -71,10 +76,18 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    // Allow PDF, Word, and image files
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(new Error('Only PDF, Word, or image files are allowed'), false);
     }
   }
 });
@@ -714,18 +727,19 @@ app.post('/api/admin/login', (req, res) => {
       }
       
       // Create JWT
-      const token = jwt.sign({ email: admin.email, id: admin.id }, jwtSecret, { expiresIn: '24h' });
+      const token = jwt.sign({ email: admin.email, id: admin.id }, jwtSecret, { expiresIn: '7d' });
       console.log('Login successful, token created');
       
-      // Set cookie
+      // Set cookie options
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('admin_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        secure: isProduction, // Only set Secure in production
+        sameSite: isProduction ? 'none' : 'lax', // None for cross-site, Lax for local
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
-      res.json({ token, user: { email: admin.email, id: admin.id } });
+      res.json({ user: { email: admin.email, id: admin.id } });
     });
   });
 });
