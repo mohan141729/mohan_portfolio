@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,8 +12,37 @@ import {
   FaInfoCircle,
   FaFileAlt
 } from 'react-icons/fa';
+import { buildApiUrl, getRequestConfig } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const Admin = () => {
+  const [stats, setStats] = useState({ projects: 0, skills: 0, certifications: 0, messages: 0 });
+  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        console.log('Fetching stats from:', buildApiUrl('/api/stats'));
+        const response = await fetch(buildApiUrl('/api/stats'), getRequestConfig());
+        console.log('Stats fetch response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Stats data:', data);
+          setStats(data);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Failed to fetch stats:', errorData);
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (isAuthenticated) fetchStats();
+  }, [isAuthenticated]);
+
   return (
     <>
       {/* Header */}
@@ -42,8 +71,8 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">Total Projects</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-800">3</p>
-              <p className="text-xs text-green-600 font-medium mt-1">+2 this month</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-800">{loading ? '-' : stats.projects}</p>
+              <p className="text-xs text-green-600 font-medium mt-1">&nbsp;</p>
             </div>
             <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg">
               <FaProjectDiagram className="text-white" size={24} />
@@ -60,8 +89,8 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">Skills</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-800">6</p>
-              <p className="text-xs text-blue-600 font-medium mt-1">+1 this week</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-800">{loading ? '-' : stats.skills}</p>
+              <p className="text-xs text-blue-600 font-medium mt-1">&nbsp;</p>
             </div>
             <div className="p-3 sm:p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg">
               <FaCode className="text-white" size={24} />
@@ -78,8 +107,8 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">Certifications</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-800">2</p>
-              <p className="text-xs text-orange-600 font-medium mt-1">+1 this month</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-800">{loading ? '-' : stats.certifications}</p>
+              <p className="text-xs text-orange-600 font-medium mt-1">&nbsp;</p>
             </div>
             <div className="p-3 sm:p-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-lg">
               <FaCertificate className="text-white" size={24} />
@@ -96,8 +125,8 @@ const Admin = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">Messages</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-800">0</p>
-              <p className="text-xs text-slate-500 font-medium mt-1">No new messages</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-800">{loading ? '-' : stats.messages}</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">&nbsp;</p>
             </div>
             <div className="p-3 sm:p-4 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-lg">
               <FaEnvelope className="text-white" size={24} />

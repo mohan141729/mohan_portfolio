@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { buildApiUrl, getFormDataConfig, ENDPOINTS } from '../config/api';
+import { buildApiUrl, getRequestConfig, getFormDataConfig, ENDPOINTS } from '../config/api';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -39,16 +39,24 @@ const ResumeManagement = () => {
 
   const fetchResume = async () => {
     try {
+      console.log('Fetching resume from:', buildApiUrl(ENDPOINTS.RESUME));
       const response = await fetch(buildApiUrl(ENDPOINTS.RESUME), getRequestConfig());
+      console.log('Resume fetch response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Resume data:', data);
         setResume(data);
       } else if (response.status === 404) {
+        console.log('No resume found (404)');
         setResume(null);
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to fetch resume:', errorData);
         setError('Failed to fetch resume');
       }
     } catch (err) {
+      console.error('Error fetching resume:', err);
       setError('Network error');
     } finally {
       setLoading(false);
@@ -82,6 +90,8 @@ const ResumeManagement = () => {
   };
 
   const handleFileUpload = async (file) => {
+    console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
     // Validate file type
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
@@ -103,13 +113,16 @@ const ResumeManagement = () => {
       const formData = new FormData();
       formData.append('resume', file);
 
+      console.log('Uploading to:', buildApiUrl(ENDPOINTS.RESUME));
       const response = await fetch(buildApiUrl(ENDPOINTS.RESUME), {
         method: 'POST',
         credentials: 'include',
         body: formData
       });
 
+      console.log('Upload response status:', response.status);
       const data = await response.json();
+      console.log('Upload response data:', data);
 
       if (response.ok) {
         setSuccess('Resume uploaded successfully!');
@@ -118,6 +131,7 @@ const ResumeManagement = () => {
         setError(data.error || 'Failed to upload resume');
       }
     } catch (err) {
+      console.error('Error uploading resume:', err);
       setError('Network error');
     } finally {
       setUploading(false);
@@ -137,6 +151,7 @@ const ResumeManagement = () => {
         setError('Failed to delete resume');
       }
     } catch (err) {
+      console.error('Error deleting resume:', err);
       setError('Network error');
     }
   };
@@ -180,8 +195,8 @@ const ResumeManagement = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="flex items-center justify-center h-screen">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading resume...</p>
