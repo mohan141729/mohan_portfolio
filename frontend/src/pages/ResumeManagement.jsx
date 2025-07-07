@@ -309,22 +309,13 @@ const ResumeManagement = () => {
                 id="resume-upload"
                 disabled={uploading}
               />
-              <label
-                htmlFor="resume-upload"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              <button
+                onClick={handleFileSelect}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center font-semibold"
               >
-                {uploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <FaUpload size={16} />
-                    Choose File
-                  </>
-                )}
-              </label>
+                <FaUpload size={16} />
+                Upload Resume
+              </button>
             </div>
           </div>
         </div>
@@ -369,10 +360,9 @@ const ResumeManagement = () => {
                 </a>
                 <button
                   onClick={handleDelete}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                  className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
                 >
-                  <FaTrash size={12} className="inline mr-1" />
-                  Delete
+                  <FaTrash /> Delete
                 </button>
               </div>
             </div>

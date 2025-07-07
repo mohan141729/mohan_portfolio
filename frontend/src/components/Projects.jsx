@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaExternalLinkAlt, FaGithub, FaEye } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -273,6 +274,19 @@ const Projects = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* View More Projects Button */}
+        {projects.length > 3 && (
+          <div className="flex justify-center mt-8 sm:mt-12">
+            <Link
+              to="/all-projects"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              <FaEye className="mr-2" />
+              View All Projects ({projects.length})
+            </Link>
           </div>
         )}
       </div>

@@ -237,7 +237,7 @@ const CertificationManagement = () => {
               resetForm();
               setShowForm(true);
             }}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center font-semibold"
           >
             <FaPlus size={16} />
             Add Certification
@@ -490,17 +490,15 @@ const CertificationManagement = () => {
                 )}
                 <button
                   onClick={() => handleEdit(certification)}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
                 >
-                  <FaEdit size={12} className="inline mr-1" />
-                  Edit
+                  <FaEdit /> Edit
                 </button>
                 <button
                   onClick={() => handleDelete(certification.id)}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                  className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
                 >
-                  <FaTrash size={12} className="inline mr-1" />
-                  Delete
+                  <FaTrash /> Delete
                 </button>
               </div>
             </div>

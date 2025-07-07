@@ -19,6 +19,7 @@ import CertificationManagement from './pages/CertificationManagement';
 import ContactManagement from './pages/ContactManagement';
 import AdminSettings from './pages/AdminSettings';
 import ResumeManagement from './pages/ResumeManagement';
+import AllProjects from './pages/AllProjects';
 import LoginModal from './components/LoginModal';
 
 function Portfolio() {
@@ -67,6 +68,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Portfolio />} />
+          <Route path="/all-projects" element={<AllProjects />} />
           
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
