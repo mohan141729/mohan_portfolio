@@ -12,24 +12,31 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Improved CORS configuration with better debugging
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
+// --- CORS CONFIGURATION ---
+// Allow requests from Vercel frontend and local dev, allow credentials (cookies)
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
   : [
-    'http://localhost:5173', 
-    'http://localhost:3000', 
+    'http://localhost:5173',
+    'http://localhost:3000',
     'http://127.0.0.1:5173',
-    'https://mohan-portfolio-chi.vercel.app' // Add your Vercel frontend domain here
+    'https://mohan-portfolio-chi.vercel.app'
   ];
 
 console.log('CORS Configuration:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ALLOWED_ORIGINS:', allowedOrigins);
 
-// --- CORS CONFIGURATION ---
-// Only allow requests from the deployed Vercel frontend and allow credentials (cookies)
 app.use(cors({
-  origin: 'https://mohan-portfolio-chi.vercel.app',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -37,6 +44,11 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Warn if JWT_SECRET is not set
+if (!process.env.JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET is not set in environment variables. Using default insecure secret!');
+}
 
 // File upload configuration
 const storage = multer.diskStorage({
@@ -670,6 +682,11 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
   });
 });
 
+// --- Add root route to avoid 404 on backend root ---
+app.get('/', (req, res) => {
+  res.send('API is running');
+});
+
 // Admin login endpoint
 app.post('/api/admin/login', (req, res) => {
   const { email, password } = req.body;
@@ -715,6 +732,7 @@ app.post('/api/admin/login', (req, res) => {
       // This backend uses JWTs stored in httpOnly cookies for authentication.
       // express-session is NOT used or needed.
       // All cookie settings for admin_token are set for secure, cross-origin usage in production.
+      // For local development, set NODE_ENV=development to use non-secure cookies.
       const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('admin_token', token, {
         httpOnly: true,
@@ -722,8 +740,8 @@ app.post('/api/admin/login', (req, res) => {
         sameSite: isProduction ? 'none' : 'lax', // None for cross-site, Lax for local
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
-      
-      res.json({ user: { email: admin.email, id: admin.id } });
+      // Return token in response for API clients/testing
+      res.json({ user: { email: admin.email, id: admin.id }, token });
     });
   });
 });
@@ -1170,7 +1188,7 @@ app.put('/api/contact-info', authenticateToken, (req, res) => {
   stmt.finalize();
 });
 
-// Health check endpoint for Render
+// --- Add health check endpoint if not present ---
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
@@ -1257,6 +1275,11 @@ app.get('/api/stats', authenticateToken, (req, res) => {
       });
     });
   });
+});
+
+// --- Utility endpoint to debug cookies (for troubleshooting) ---
+app.get('/api/debug-cookies', (req, res) => {
+  res.json({ cookies: req.cookies });
 });
 
 app.listen(PORT, () => {

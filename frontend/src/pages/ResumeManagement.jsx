@@ -23,6 +23,12 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const ResumeManagement = () => {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +50,7 @@ const ResumeManagement = () => {
       console.log('Resume fetch response status:', response.status);
       
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson(response);
         console.log('Resume data:', data);
         setResume(data);
       } else if (response.status === 401) {
@@ -55,7 +61,7 @@ const ResumeManagement = () => {
         console.log('No resume found (404)');
         setResume(null);
       } else {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await safeJson(response);
         console.error('Failed to fetch resume:', errorData);
         setError('Failed to fetch resume');
       }
@@ -125,7 +131,7 @@ const ResumeManagement = () => {
       });
 
       console.log('Upload response status:', response.status);
-      const data = await response.json();
+      const data = await safeJson(response);
       console.log('Upload response data:', data);
 
       if (response.ok) {

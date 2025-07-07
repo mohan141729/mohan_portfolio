@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl, getFormDataConfig, ENDPOINTS } from '../config/api';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const HeroManagement = () => {
   const [heroContent, setHeroContent] = useState({
     name: '',
@@ -27,8 +33,15 @@ const HeroManagement = () => {
       if (response.ok) {
         const data = await response.json();
         setHeroContent(data);
+      } else if (response.status === 401 || response.status === 403) {
+        setMessage('Session expired. Please log in again.');
+        // Optionally: trigger logout or redirect
+      } else {
+        const error = await safeJson(response);
+        setMessage(error.error || 'Failed to fetch hero content');
       }
     } catch (err) {
+      setMessage('Network error. Please try again later.');
       console.error('Error fetching hero content:', err);
     } finally {
       setLoading(false);
@@ -67,15 +80,17 @@ const HeroManagement = () => {
         setMessage('Hero content updated successfully!');
         setProfileImage(null);
         setBackgroundImage(null);
-        // Reset file inputs
         document.getElementById('profile-image').value = '';
         document.getElementById('background-image').value = '';
+      } else if (response.status === 401 || response.status === 403) {
+        setMessage('Session expired. Please log in again.');
+        // Optionally: trigger logout or redirect
       } else {
-        const error = await response.json();
-        setMessage(`Error: ${error.error}`);
+        const error = await safeJson(response);
+        setMessage(`Error: ${error.error || 'Failed to update hero content'}`);
       }
     } catch (err) {
-      setMessage('Error updating hero content');
+      setMessage('Network error. Please try again later.');
       console.error('Error:', err);
     } finally {
       setSaving(false);

@@ -19,6 +19,12 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const SkillManagement = () => {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +55,7 @@ const SkillManagement = () => {
     try {
       const response = await fetch(buildApiUrl(ENDPOINTS.SKILLS), getRequestConfig());
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson(response);
         setSkills(data);
       } else {
         setError('Failed to fetch skills');
@@ -103,7 +109,7 @@ const SkillManagement = () => {
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      const data = await safeJson(response);
 
       if (response.ok) {
         setSuccess(editingSkill ? 'Skill updated successfully!' : 'Skill created successfully!');

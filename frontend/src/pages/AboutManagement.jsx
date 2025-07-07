@@ -23,6 +23,12 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { buildApiUrl, getRequestConfig, ENDPOINTS } from '../config/api';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const AboutManagement = () => {
   const [aboutContent, setAboutContent] = useState({
     journey_title: '',
@@ -46,7 +52,7 @@ const AboutManagement = () => {
     try {
       const response = await fetch(buildApiUrl(ENDPOINTS.ABOUT), getRequestConfig());
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson(response);
         setAboutContent(data);
       }
     } catch (err) {
@@ -67,7 +73,7 @@ const AboutManagement = () => {
       if (response.ok) {
         setMessage('About content updated successfully!');
       } else {
-        const error = await response.json();
+        const error = await safeJson(response);
         setMessage(`Error: ${error.error}`);
       }
     } catch (err) {

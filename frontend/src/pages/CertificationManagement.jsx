@@ -25,6 +25,12 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const CertificationManagement = () => {
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +65,7 @@ const CertificationManagement = () => {
     try {
       const response = await fetch(buildApiUrl(ENDPOINTS.CERTIFICATIONS), getRequestConfig());
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson(response);
         setCertifications(data);
       } else {
         setError('Failed to fetch certifications');
@@ -135,7 +141,7 @@ const CertificationManagement = () => {
         body: formDataToSend
       });
 
-      const data = await response.json();
+      const data = await safeJson(response);
 
       if (response.ok) {
         setSuccess(editingCertification ? 'Certification updated successfully!' : 'Certification created successfully!');

@@ -22,6 +22,12 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
+// Helper to safely parse JSON
+const safeJson = async (response) => {
+  try { return await response.json(); }
+  catch { return {}; }
+};
+
 const ProjectManagement = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +62,7 @@ const ProjectManagement = () => {
     try {
       const response = await fetch(buildApiUrl(ENDPOINTS.PROJECTS), getRequestConfig());
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson(response);
         setProjects(data);
       } else {
         setError('Failed to fetch projects');
@@ -138,7 +144,7 @@ const ProjectManagement = () => {
         body: formDataToSend
       });
 
-      const data = await response.json();
+      const data = await safeJson(response);
 
       if (response.ok) {
         setSuccess(editingProject ? 'Project updated successfully!' : 'Project created successfully!');
