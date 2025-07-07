@@ -27,28 +27,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ALLOWED_ORIGINS:', allowedOrigins);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      console.log('CORS: Allowing request with no origin');
-      return callback(null, true);
-    }
-    
-    // For development/testing, allow all origins temporarily
-    if (process.env.NODE_ENV === 'development') {
-      console.log('CORS: Development mode - allowing origin:', origin);
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('CORS: Allowing origin:', origin);
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['https://mohan-portfolio-chi.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -1256,13 +1235,6 @@ app.post('/api/admin/logout', (req, res) => {
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Serve frontend build in production
-const frontendBuildPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendBuildPath));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendBuildPath, 'index.html'));
-});
 
 // Stats endpoint for dashboard
 app.get('/api/stats', authenticateToken, (req, res) => {
