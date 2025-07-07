@@ -26,8 +26,10 @@ console.log('CORS Configuration:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ALLOWED_ORIGINS:', allowedOrigins);
 
+// --- CORS CONFIGURATION ---
+// Only allow requests from the deployed Vercel frontend and allow credentials (cookies)
 app.use(cors({
-  origin: ['https://mohan-portfolio-chi.vercel.app'],
+  origin: 'https://mohan-portfolio-chi.vercel.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -709,7 +711,10 @@ app.post('/api/admin/login', (req, res) => {
       const token = jwt.sign({ email: admin.email, id: admin.id }, jwtSecret, { expiresIn: '7d' });
       console.log('Login successful, token created');
       
-      // Set cookie options
+      // --- AUTHENTICATION NOTE ---
+      // This backend uses JWTs stored in httpOnly cookies for authentication.
+      // express-session is NOT used or needed.
+      // All cookie settings for admin_token are set for secure, cross-origin usage in production.
       const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('admin_token', token, {
         httpOnly: true,
