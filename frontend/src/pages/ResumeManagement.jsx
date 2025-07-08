@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { buildApiUrl, getRequestConfig, getFormDataConfig, ENDPOINTS } from '../config/api';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +38,7 @@ const ResumeManagement = () => {
   const [dragActive, setDragActive] = useState(false);
 
   const { logout } = useAuth();
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchResume();
@@ -284,6 +285,8 @@ const ResumeManagement = () => {
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
           >
             <div className="space-y-4">
               <div className="mx-auto w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
@@ -308,9 +311,10 @@ const ResumeManagement = () => {
                 className="hidden"
                 id="resume-upload"
                 disabled={uploading}
+                ref={fileInputRef}
               />
               <button
-                onClick={handleFileSelect}
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center font-semibold"
               >
                 <FaUpload size={16} />
