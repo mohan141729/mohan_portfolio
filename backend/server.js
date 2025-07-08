@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 4000;
 
 // --- CORS CONFIGURATION ---
 // Allow requests from Vercel frontend and local dev, allow credentials (cookies)
+const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : [
@@ -31,6 +32,10 @@ app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
+    if (!isProduction) {
+      // In development, allow all origins for easier testing
+      return callback(null, true);
+    }
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     } else {
