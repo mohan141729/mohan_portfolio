@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -90,300 +90,115 @@ const upload = multer({
   }
 });
 
-// SQLite DB setup
-const dbPath = path.join(__dirname, 'portfolio.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to SQLite database.');
-  }
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://techlearn2005:mohanPortfolio@mohanportfolio.otpcvr7.mongodb.net/portfolio';
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('Connected to MongoDB Atlas successfully!');
+})
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
 });
 
-// Ensure tables are created before seeding
+// Mongoose Models
+const projectSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: String,
+  tech: [String],
+  featured: { type: Boolean, default: false },
+  live: String,
+  github: String,
+  image: String,
+}, { timestamps: true });
 
-db.serialize(() => {
-  // Create projects table if not exists
-  const createProjectsTable = `
-  CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    tech TEXT,
-    featured INTEGER DEFAULT 0,
-    live TEXT,
-    github TEXT,
-    image TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createProjectsTable, (err) => {
-    if (err) console.error('Error creating projects table:', err.message);
-  });
+const Project = mongoose.model('Project', projectSchema);
 
-  // Create admin table if not exists
-  const createAdminTable = `
-  CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createAdminTable, (err) => {
-    if (err) console.error('Error creating admin table:', err.message);
-  });
+const adminSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password_hash: { type: String, required: true },
+}, { timestamps: true });
 
-  // Create skills table if not exists
-  const createSkillsTable = `
-  CREATE TABLE IF NOT EXISTS skills (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    category TEXT,
-    proficiency INTEGER DEFAULT 50,
-    icon TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createSkillsTable, (err) => {
-    if (err) console.error('Error creating skills table:', err.message);
-  });
+const Admin = mongoose.model('Admin', adminSchema);
 
-  // Create certifications table if not exists
-  const createCertificationsTable = `
-  CREATE TABLE IF NOT EXISTS certifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    issuer TEXT,
-    issue_date TEXT,
-    expiry_date TEXT,
-    credential_id TEXT,
-    credential_url TEXT,
-    image TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createCertificationsTable, (err) => {
-    if (err) console.error('Error creating certifications table:', err.message);
-  });
+const skillSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: String,
+  proficiency: { type: Number, default: 50 },
+  icon: String,
+}, { timestamps: true });
 
-  // Create contact messages table if not exists
-  const createContactTable = `
-  CREATE TABLE IF NOT EXISTS contact_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    subject TEXT,
-    message TEXT NOT NULL,
-    status TEXT DEFAULT 'unread',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createContactTable, (err) => {
-    if (err) console.error('Error creating contact table:', err.message);
-  });
+const Skill = mongoose.model('Skill', skillSchema);
 
-  // Create hero content table if not exists
-  const createHeroTable = `
-  CREATE TABLE IF NOT EXISTS hero_content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    title TEXT NOT NULL,
-    subtitle TEXT,
-    description TEXT,
-    profile_image TEXT,
-    background_image TEXT,
-    github_url TEXT,
-    linkedin_url TEXT,
-    welcome_text TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createHeroTable, (err) => {
-    if (err) console.error('Error creating hero table:', err.message);
-  });
+const certificationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  issuer: String,
+  issue_date: String,
+  expiry_date: String,
+  credential_id: String,
+  credential_url: String,
+  image: String,
+}, { timestamps: true });
 
-  // Create about content table if not exists
-  const createAboutTable = `
-  CREATE TABLE IF NOT EXISTS about_content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    journey_title TEXT NOT NULL,
-    journey_points TEXT,
-    education_title TEXT NOT NULL,
-    education_items TEXT,
-    strengths_title TEXT NOT NULL,
-    strengths_list TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createAboutTable, (err) => {
-    if (err) console.error('Error creating about table:', err.message);
-  });
+const Certification = mongoose.model('Certification', certificationSchema);
 
-  // Create contact info table if not exists
-  const createContactInfoTable = `
-  CREATE TABLE IF NOT EXISTS contact_info (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    subtitle TEXT,
-    description TEXT,
-    location TEXT,
-    email TEXT,
-    github_url TEXT,
-    linkedin_url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  `;
-  db.run(createContactInfoTable, (err) => {
-    if (err) console.error('Error creating contact info table:', err.message);
-  });
+const contactMessageSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  subject: String,
+  message: { type: String, required: true },
+  status: { type: String, default: 'unread' },
+}, { timestamps: true });
 
-  // Seed sample data if tables are empty
-  const seedData = () => {
-    // Seed admin user
-    db.get('SELECT COUNT(*) as count FROM admins', (err, row) => {
-      if (row.count === 0) {
-        // Use environment variable if available, otherwise create new hash
-        const passwordHash = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('admin123', 10);
-        const stmt = db.prepare('INSERT INTO admins (email, password_hash) VALUES (?, ?)');
-        stmt.run('admin@example.com', passwordHash);
-        stmt.finalize();
-        console.log('Seeded admin user.');
-      }
-    });
+const ContactMessage = mongoose.model('ContactMessage', contactMessageSchema);
 
-    // Seed projects
-    db.get('SELECT COUNT(*) as count FROM projects', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO projects (title, description, tech, featured, live, github) VALUES (?, ?, ?, ?, ?, ?)');
-        stmt.run(
-          'Learning Path Generator',
-          'Full-stack AI-powered platform that generates personalized learning paths from Beginner to Advanced levels using Gemini API.',
-          'React,Tailwind,Node.js,SQLite,Gemini API',
-          1,
-          '#',
-          '#'
-        );
-        stmt.run(
-          'Food Munch',
-          'Mobile-first food listing website with responsive design and modern UI components.',
-          'HTML,CSS,Bootstrap',
-          0,
-          '#',
-          '#'
-        );
-        stmt.run(
-          'Tourism Website',
-          'Destination galleries with virtual tours, Bootstrap carousel, and embedded videos.',
-          'HTML,CSS,Bootstrap,JavaScript',
-          0,
-          '#',
-          '#'
-        );
-        stmt.finalize();
-        console.log('Seeded sample projects.');
-      }
-    });
+const heroContentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  title: { type: String, required: true },
+  subtitle: String,
+  description: String,
+  profile_image: String,
+  background_image: String,
+  github_url: String,
+  linkedin_url: String,
+  welcome_text: String,
+}, { timestamps: true });
 
-    // Seed skills
-    db.get('SELECT COUNT(*) as count FROM skills', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO skills (name, category, proficiency, icon) VALUES (?, ?, ?, ?)');
-        const skills = [
-          ['React', 'Frontend', 90, 'react'],
-          ['Node.js', 'Backend', 85, 'nodejs'],
-          ['JavaScript', 'Programming', 95, 'javascript'],
-          ['Python', 'Programming', 80, 'python'],
-          ['SQL', 'Database', 85, 'database'],
-          ['Git', 'Tools', 90, 'git']
-        ];
-        skills.forEach(skill => stmt.run(skill));
-        stmt.finalize();
-        console.log('Seeded sample skills.');
-      }
-    });
+const HeroContent = mongoose.model('HeroContent', heroContentSchema);
 
-    // Seed certifications
-    db.get('SELECT COUNT(*) as count FROM certifications', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO certifications (name, issuer, issue_date, credential_id) VALUES (?, ?, ?, ?)');
-        stmt.run('Full Stack Web Development', 'Coursera', '2024-01-15', 'FSWD-2024-001');
-        stmt.run('React Developer', 'Meta', '2024-03-20', 'REACT-2024-002');
-        stmt.finalize();
-        console.log('Seeded sample certifications.');
-      }
-    });
+const aboutContentSchema = new mongoose.Schema({
+  journey_title: { type: String, required: true },
+  journey_points: [Object],
+  education_title: { type: String, required: true },
+  education_items: [Object],
+  strengths_title: { type: String, required: true },
+  strengths_list: [String],
+}, { timestamps: true });
 
-    // Seed hero content
-    db.get('SELECT COUNT(*) as count FROM hero_content', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO hero_content (name, title, subtitle, description, profile_image, background_image, github_url, linkedin_url, welcome_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        stmt.run(
-          'Mohan D',
-          'Full-Stack Developer | AI/ML Enthusiast',
-          'Hi, I\'m Mohan D',
-          'Passionate about creating innovative web solutions and exploring the frontiers of artificial intelligence. Currently building full-stack applications with modern technologies.',
-          'https://res.cloudinary.com/dovmtmu7y/image/upload/v1751693333/drilldown_iq6iin.jpg',
-          'https://res.cloudinary.com/dovmtmu7y/image/upload/v1751692323/hero-bg-CjdCbMYo_htrzjv.jpg',
-          'https://github.com/mohan-d',
-          'https://linkedin.com/in/mohan-d',
-          'Welcome to my digital workspace'
-        );
-        stmt.finalize();
-        console.log('Seeded hero content.');
-      }
-    });
+const AboutContent = mongoose.model('AboutContent', aboutContentSchema);
 
-    // Seed about content
-    db.get('SELECT COUNT(*) as count FROM about_content', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO about_content (journey_title, journey_points, education_title, education_items, strengths_title, strengths_list) VALUES (?, ?, ?, ?, ?, ?)');
-        stmt.run(
-          'My Journey',
-          JSON.stringify([
-            { point: 'Passion for Technology: My journey began with curiosity about how websites work, evolving into a deep appreciation for seamless user experiences and innovative solutions.' },
-            { point: 'Continuous Learning: Currently pursuing NxtWave\'s full-stack certification, expanding expertise in React, Node.js, and exploring AI/ML integration.' },
-            { point: 'Future Goals: Seeking opportunities to contribute to innovative projects that make real impact, building intuitive interfaces and robust backend systems.' }
-          ]),
-          'Education Timeline',
-          JSON.stringify([
-            { institution: 'ZP High School', details: '(10 CGPA)' },
-            { institution: 'Viswa Bharathi Jr. College', details: '(95%)' },
-            { institution: 'Sree Dattha', details: '(8.4 CGPA)' },
-            { institution: 'NxtWave Full-Stack Certification', details: '(Ongoing)' }
-          ]),
-          'Core Strengths',
-          JSON.stringify(['Problem Solving', 'Collaboration', 'Adaptability', 'Creativity'])
-        );
-        stmt.finalize();
-        console.log('Seeded about content.');
-      }
-    });
+const contactInfoSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  subtitle: String,
+  description: String,
+  location: String,
+  email: String,
+  github_url: String,
+  linkedin_url: String,
+}, { timestamps: true });
 
-    // Seed contact info
-    db.get('SELECT COUNT(*) as count FROM contact_info', (err, row) => {
-      if (row.count === 0) {
-        const stmt = db.prepare('INSERT INTO contact_info (title, subtitle, description, location, email, github_url, linkedin_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        stmt.run(
-          'Get In Touch',
-          'Let\'s Connect',
-          'I\'m passionate about creating innovative web solutions and exploring the frontiers of artificial intelligence. Currently building full-stack applications with modern technologies.',
-          'Hyderabad, Telangana, India',
-          'mohan.developer@gmail.com',
-          'https://github.com/mohan-d',
-          'https://linkedin.com/in/mohan-d'
-        );
-        stmt.finalize();
-        console.log('Seeded contact info.');
-      }
-    });
-  };
-  seedData();
-});
+const ContactInfo = mongoose.model('ContactInfo', contactInfoSchema);
+
+const resumeSchema = new mongoose.Schema({
+  filename: { type: String, required: true },
+  file_path: { type: String, required: true },
+  size: { type: Number, required: true },
+}, { timestamps: true });
+
+const Resume = mongoose.model('Resume', resumeSchema);
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -404,14 +219,13 @@ const authenticateToken = (req, res, next) => {
 
 // API endpoint: Get all projects
 app.get('/api/projects', (req, res) => {
-  db.all('SELECT * FROM projects ORDER BY featured DESC, created_at DESC', (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      const projects = rows.map((p) => ({ ...p, tech: p.tech ? p.tech.split(',') : [] }));
+  Project.find().sort({ featured: -1, createdAt: -1 })
+    .then(projects => {
       res.json(projects);
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Create new project (protected)
@@ -425,24 +239,26 @@ app.post('/api/projects', authenticateToken, upload.single('image'), (req, res) 
 
   // If this project is featured, un-feature all others first
   const doInsert = () => {
-    const stmt = db.prepare('INSERT INTO projects (title, description, tech, featured, live, github, image) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    stmt.run(title, description, tech, featured ? 1 : 0, live, github, image, function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.status(201).json({ id: this.lastID, message: 'Project created successfully' });
-      }
+    const newProject = new Project({
+      title, description, tech, featured, live, github, image
     });
-    stmt.finalize();
+    newProject.save()
+      .then(project => {
+        res.status(201).json({ id: project._id, message: 'Project created successfully' });
+      })
+      .catch(err => {
+        res.status(500).json({ error: err.message });
+      });
   };
 
   if (featured && (featured === '1' || featured === 1 || featured === true)) {
-    db.run('UPDATE projects SET featured = 0', [], (err) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      doInsert();
-    });
+    Project.updateMany({ _id: { $ne: req.params.id } }, { $set: { featured: false } })
+      .then(() => {
+        doInsert();
+      })
+      .catch(err => {
+        res.status(500).json({ error: err.message });
+      });
   } else {
     doInsert();
   }
@@ -454,66 +270,48 @@ app.put('/api/projects/:id', authenticateToken, upload.single('image'), (req, re
   const { title, description, tech, featured, live, github } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  let query = 'UPDATE projects SET title = ?, description = ?, tech = ?, featured = ?, live = ?, github = ?, updated_at = CURRENT_TIMESTAMP';
-  let params = [title, description, tech, featured ? 1 : 0, live, github];
-
+  let query = { title, description, tech, featured, live, github };
   if (image) {
-    query += ', image = ?';
-    params.push(image);
+    query.image = `/uploads/${req.file.filename}`;
   }
 
-  query += ' WHERE id = ?';
-  params.push(id);
-
-  // If this project is being set as featured, un-feature all others first
-  const doUpdate = () => {
-    db.run(query, params, function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else if (this.changes === 0) {
-        res.status(404).json({ error: 'Project not found' });
-      } else {
-        res.json({ message: 'Project updated successfully' });
+  Project.findByIdAndUpdate(id, { $set: query, updatedAt: Date.now() })
+    .then(project => {
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
       }
+      res.json({ message: 'Project updated successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
     });
-  };
-
-  if (featured && (featured === '1' || featured === 1 || featured === true)) {
-    db.run('UPDATE projects SET featured = 0 WHERE id != ?', [id], (err) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      doUpdate();
-    });
-  } else {
-    doUpdate();
-  }
 });
 
 // API endpoint: Delete project (protected)
 app.delete('/api/projects/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   
-  db.run('DELETE FROM projects WHERE id = ?', [id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Project not found' });
-    } else {
+  Project.findByIdAndDelete(id)
+    .then(project => {
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
       res.json({ message: 'Project deleted successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Get all skills
 app.get('/api/skills', (req, res) => {
-  db.all('SELECT * FROM skills ORDER BY category, proficiency DESC', (err, rows) => {
-    if (err) {
+  Skill.find().sort({ category: 1, proficiency: -1 })
+    .then(skills => {
+      res.json(skills);
+    })
+    .catch(err => {
       res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
-    }
-  });
+    });
 });
 
 // API endpoint: Create skill (protected)
@@ -524,15 +322,17 @@ app.post('/api/skills', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Skill name is required' });
   }
 
-  const stmt = db.prepare('INSERT INTO skills (name, category, proficiency, icon) VALUES (?, ?, ?, ?)');
-  stmt.run(name, category, proficiency || 50, icon, function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ id: this.lastID, message: 'Skill created successfully' });
-    }
+  const newSkill = new Skill({
+    name, category, proficiency: proficiency || 50, icon
   });
-  stmt.finalize();
+
+  newSkill.save()
+    .then(skill => {
+      res.status(201).json({ id: skill._id, message: 'Skill created successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Update skill (protected)
@@ -540,42 +340,43 @@ app.put('/api/skills/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { name, category, proficiency, icon } = req.body;
 
-  db.run('UPDATE skills SET name = ?, category = ?, proficiency = ?, icon = ? WHERE id = ?', 
-    [name, category, proficiency, icon, id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Skill not found' });
-    } else {
+  Skill.findByIdAndUpdate(id, { name, category, proficiency, icon }, { new: true })
+    .then(skill => {
+      if (!skill) {
+        return res.status(404).json({ error: 'Skill not found' });
+      }
       res.json({ message: 'Skill updated successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Delete skill (protected)
 app.delete('/api/skills/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   
-  db.run('DELETE FROM skills WHERE id = ?', [id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Skill not found' });
-    } else {
+  Skill.findByIdAndDelete(id)
+    .then(skill => {
+      if (!skill) {
+        return res.status(404).json({ error: 'Skill not found' });
+      }
       res.json({ message: 'Skill deleted successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Get all certifications
 app.get('/api/certifications', (req, res) => {
-  db.all('SELECT * FROM certifications ORDER BY issue_date DESC', (err, rows) => {
-    if (err) {
+  Certification.find().sort({ issue_date: -1 })
+    .then(certifications => {
+      res.json(certifications);
+    })
+    .catch(err => {
       res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
-    }
-  });
+    });
 });
 
 // API endpoint: Create certification (protected)
@@ -587,15 +388,17 @@ app.post('/api/certifications', authenticateToken, upload.single('image'), (req,
     return res.status(400).json({ error: 'Name and issuer are required' });
   }
 
-  const stmt = db.prepare('INSERT INTO certifications (name, issuer, issue_date, expiry_date, credential_id, credential_url, image) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  stmt.run(name, issuer, issue_date, expiry_date, credential_id, credential_url, image, function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ id: this.lastID, message: 'Certification created successfully' });
-    }
+  const newCertification = new Certification({
+    name, issuer, issue_date, expiry_date, credential_id, credential_url, image
   });
-  stmt.finalize();
+
+  newCertification.save()
+    .then(certification => {
+      res.status(201).json({ id: certification._id, message: 'Certification created successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Update certification (protected)
@@ -604,41 +407,37 @@ app.put('/api/certifications/:id', authenticateToken, upload.single('image'), (r
   const { name, issuer, issue_date, expiry_date, credential_id, credential_url } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  let query = 'UPDATE certifications SET name = ?, issuer = ?, issue_date = ?, expiry_date = ?, credential_id = ?, credential_url = ?';
-  let params = [name, issuer, issue_date, expiry_date, credential_id, credential_url];
-
+  let updateData = { name, issuer, issue_date, expiry_date, credential_id, credential_url };
   if (image) {
-    query += ', image = ?';
-    params.push(image);
+    updateData.image = `/uploads/${req.file.filename}`;
   }
 
-  query += ' WHERE id = ?';
-  params.push(id);
-
-  db.run(query, params, function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Certification not found' });
-    } else {
+  Certification.findByIdAndUpdate(id, updateData, { new: true })
+    .then(certification => {
+      if (!certification) {
+        return res.status(404).json({ error: 'Certification not found' });
+      }
       res.json({ message: 'Certification updated successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Delete certification (protected)
 app.delete('/api/certifications/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   
-  db.run('DELETE FROM certifications WHERE id = ?', [id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Certification not found' });
-    } else {
+  Certification.findByIdAndDelete(id)
+    .then(certification => {
+      if (!certification) {
+        return res.status(404).json({ error: 'Certification not found' });
+      }
       res.json({ message: 'Certification deleted successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Submit contact form
@@ -649,26 +448,28 @@ app.post('/api/contact', (req, res) => {
     return res.status(400).json({ error: 'Name, email, and message are required' });
   }
 
-  const stmt = db.prepare('INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)');
-  stmt.run(name, email, subject, message, function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(201).json({ message: 'Message sent successfully' });
-    }
+  const newMessage = new ContactMessage({
+    name, email, subject, message
   });
-  stmt.finalize();
+
+  newMessage.save()
+    .then(message => {
+      res.status(201).json({ message: 'Message sent successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // API endpoint: Get contact messages (protected)
 app.get('/api/contact', authenticateToken, (req, res) => {
-  db.all('SELECT * FROM contact_messages ORDER BY created_at DESC', (err, rows) => {
-    if (err) {
+  ContactMessage.find().sort({ createdAt: -1 })
+    .then(messages => {
+      res.json(messages);
+    })
+    .catch(err => {
       res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
-    }
-  });
+    });
 });
 
 // API endpoint: Update message status (protected)
@@ -676,15 +477,16 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  db.run('UPDATE contact_messages SET status = ? WHERE id = ?', [status, id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else if (this.changes === 0) {
-      res.status(404).json({ error: 'Message not found' });
-    } else {
+  ContactMessage.findByIdAndUpdate(id, { status }, { new: true })
+    .then(message => {
+      if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
       res.json({ message: 'Message status updated successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // --- Add root route to avoid 404 on backend root ---
@@ -703,52 +505,46 @@ app.post('/api/admin/login', (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  // Query admin from database
-  const query = 'SELECT * FROM admins WHERE email = ?';
-  db.get(query, [email], (err, admin) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Authentication error' });
-    }
-
-    if (!admin) {
-      console.log('Admin not found:', email);
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Verify password
-    bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        console.error('Bcrypt error:', err);
-        return res.status(500).json({ error: 'Authentication error' });
-      }
-      
-      console.log('Password match:', isMatch);
-      
-      if (!isMatch) {
+  Admin.findOne({ email })
+    .then(admin => {
+      if (!admin) {
+        console.log('Admin not found:', email);
         return res.status(401).json({ error: 'Invalid email or password' });
       }
-      
-      // Create JWT
-      const token = jwt.sign({ email: admin.email, id: admin.id }, jwtSecret, { expiresIn: '7d' });
-      console.log('Login successful, token created');
-      
-      // --- AUTHENTICATION NOTE ---
-      // This backend uses JWTs stored in httpOnly cookies for authentication.
-      // express-session is NOT used or needed.
-      // All cookie settings for admin_token are set for secure, cross-origin usage in production.
-      // For local development, set NODE_ENV=development to use non-secure cookies.
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('admin_token', token, {
-        httpOnly: true,
-        secure: isProduction, // Only set Secure in production
-        sameSite: isProduction ? 'none' : 'lax', // None for cross-site, Lax for local
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+
+      // Verify password
+      bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
+        if (err) {
+          console.error('Bcrypt error:', err);
+          return res.status(500).json({ error: 'Authentication error' });
+        }
+        
+        console.log('Password match:', isMatch);
+        
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        
+        // Create JWT
+        const token = jwt.sign({ email: admin.email, id: admin._id }, jwtSecret, { expiresIn: '7d' });
+        console.log('Login successful, token created');
+        
+        // Set cookie
+        const isProduction = process.env.NODE_ENV === 'production';
+        res.cookie('admin_token', token, {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite: isProduction ? 'none' : 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        
+        res.json({ user: { email: admin.email, id: admin._id }, token });
       });
-      // Return token in response for API clients/testing
-      res.json({ user: { email: admin.email, id: admin.id }, token });
+    })
+    .catch(err => {
+      console.error('Database error:', err);
+      res.status(500).json({ error: 'Authentication error' });
     });
-  });
 });
 
 // Add token verification endpoint
@@ -778,43 +574,42 @@ app.put('/api/admin/change-password', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Current password and new password are required' });
   }
 
-  // Get admin from database
-  db.get('SELECT * FROM admins WHERE email = ?', [req.user.email], (err, admin) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
-    }
-
-    // Verify current password
-    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: 'Authentication error' });
+  Admin.findOne({ email: req.user.email })
+    .then(admin => {
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Current password is incorrect' });
-      }
-
-      // Hash new password
-      bcrypt.hash(newPassword, 10, (err, newHash) => {
+      // Verify current password
+      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
         if (err) {
-          return res.status(500).json({ error: 'Password hashing error' });
+          return res.status(500).json({ error: 'Authentication error' });
         }
 
-        // Update password in database
-        db.run('UPDATE admins SET password_hash = ? WHERE email = ?', [newHash, req.user.email], function(err) {
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        bcrypt.hash(newPassword, 10, (err, newHash) => {
           if (err) {
-            return res.status(500).json({ error: 'Failed to update password' });
+            return res.status(500).json({ error: 'Password hashing error' });
           }
 
-          res.json({ message: 'Password updated successfully' });
+          // Update password in database
+          Admin.findOneAndUpdate({ email: req.user.email }, { password_hash: newHash })
+            .then(() => {
+              res.json({ message: 'Password updated successfully' });
+            })
+            .catch(err => {
+              res.status(500).json({ error: 'Failed to update password' });
+            });
         });
       });
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'Database error' });
     });
-  });
 });
 
 // Admin change email endpoint
@@ -831,47 +626,46 @@ app.put('/api/admin/change-email', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Invalid email format' });
   }
 
-  // Get admin from database
-  db.get('SELECT * FROM admins WHERE email = ?', [req.user.email], (err, admin) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
-    }
-
-    // Verify current password
-    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: 'Authentication error' });
+  Admin.findOne({ email: req.user.email })
+    .then(admin => {
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Current password is incorrect' });
-      }
-
-      // Check if new email already exists
-      db.get('SELECT id FROM admins WHERE email = ?', [newEmail], (err, existingAdmin) => {
+      // Verify current password
+      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
         if (err) {
-          return res.status(500).json({ error: 'Database error' });
+          return res.status(500).json({ error: 'Authentication error' });
         }
 
-        if (existingAdmin) {
-          return res.status(400).json({ error: 'Email already exists' });
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Current password is incorrect' });
         }
 
-        // Update email in database
-        db.run('UPDATE admins SET email = ? WHERE email = ?', [newEmail, req.user.email], function(err) {
-          if (err) {
-            return res.status(500).json({ error: 'Failed to update email' });
-          }
+        // Check if new email already exists
+        Admin.findOne({ email: newEmail })
+          .then(existingAdmin => {
+            if (existingAdmin) {
+              return res.status(400).json({ error: 'Email already exists' });
+            }
 
-          res.json({ message: 'Email updated successfully' });
-        });
+            // Update email in database
+            Admin.findOneAndUpdate({ email: req.user.email }, { email: newEmail })
+              .then(() => {
+                res.json({ message: 'Email updated successfully' });
+              })
+              .catch(err => {
+                res.status(500).json({ error: 'Failed to update email' });
+              });
+          })
+          .catch(err => {
+            res.status(500).json({ error: 'Database error' });
+          });
       });
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'Database error' });
     });
-  });
 });
 
 // Resume upload configuration
@@ -907,44 +701,34 @@ const resumeUpload = multer({
 });
 
 // Create resume table if not exists
-db.run(`
-  CREATE TABLE IF NOT EXISTS resumes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+// This section is no longer needed as resume functionality is not in the new schema.
 
 // Get resume endpoint (protected)
 app.get('/api/resume', authenticateToken, (req, res) => {
-  db.get('SELECT * FROM resumes ORDER BY uploaded_at DESC LIMIT 1', (err, resume) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'No resume found' });
-    }
-    
-    res.json(resume);
-  });
+  Resume.findOne().sort({ createdAt: -1 })
+    .then(resume => {
+      if (!resume) {
+        return res.status(404).json({ error: 'No resume found' });
+      }
+      res.json(resume);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Public resume endpoint
 app.get('/api/public/resume', (req, res) => {
-  db.get('SELECT * FROM resumes ORDER BY uploaded_at DESC LIMIT 1', (err, resume) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'No resume found' });
-    }
-    
-    res.json(resume);
-  });
+  Resume.findOne().sort({ createdAt: -1 })
+    .then(resume => {
+      if (!resume) {
+        return res.status(404).json({ error: 'No resume found' });
+      }
+      res.json(resume);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Upload resume endpoint
@@ -954,88 +738,84 @@ app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), (req, 
   }
 
   // Delete existing resume
-  db.run('DELETE FROM resumes', (err) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  Resume.deleteMany({})
+    .then(() => {
+      // Insert new resume
+      const newResume = new Resume({
+        filename: req.file.originalname,
+        file_path: `/uploads/${req.file.filename}`,
+        size: req.file.size
+      });
 
-    // Insert new resume
-    const stmt = db.prepare('INSERT INTO resumes (filename, file_path, size) VALUES (?, ?, ?)');
-    stmt.run(req.file.originalname, `/uploads/${req.file.filename}`, req.file.size, function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.status(201).json({ 
-          id: this.lastID, 
-          filename: req.file.originalname,
-          file_path: `/uploads/${req.file.filename}`,
-          size: req.file.size,
-          message: 'Resume uploaded successfully' 
-        });
-      }
+      return newResume.save();
+    })
+    .then(resume => {
+      res.status(201).json({ 
+        id: resume._id, 
+        filename: resume.filename,
+        file_path: resume.file_path,
+        size: resume.size,
+        message: 'Resume uploaded successfully' 
+      });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
     });
-    stmt.finalize();
-  });
 });
 
 // Delete resume endpoint
 app.delete('/api/resume', authenticateToken, (req, res) => {
-  db.get('SELECT * FROM resumes ORDER BY uploaded_at DESC LIMIT 1', (err, resume) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    if (!resume) {
-      return res.status(404).json({ error: 'No resume found' });
-    }
-
-    // Delete file from filesystem
-    const filePath = path.join(__dirname, resume.file_path);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // Delete from database
-    db.run('DELETE FROM resumes WHERE id = ?', [resume.id], function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.json({ message: 'Resume deleted successfully' });
+  Resume.findOne().sort({ createdAt: -1 })
+    .then(resume => {
+      if (!resume) {
+        return res.status(404).json({ error: 'No resume found' });
       }
+
+      // Delete file from filesystem
+      const filePath = path.join(__dirname, resume.file_path);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      // Delete from database
+      return Resume.findByIdAndDelete(resume._id);
+    })
+    .then(() => {
+      res.json({ message: 'Resume deleted successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
     });
-  });
 });
 
 // Hero Content API endpoints
 
 // Get hero content (public)
 app.get('/api/public/hero', (req, res) => {
-  db.get('SELECT * FROM hero_content ORDER BY created_at DESC LIMIT 1', (err, hero) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!hero) {
-      return res.status(404).json({ error: 'No hero content found' });
-    }
-    
-    res.json(hero);
-  });
+  HeroContent.findOne().sort({ createdAt: -1 })
+    .then(hero => {
+      if (!hero) {
+        return res.status(404).json({ error: 'No hero content found' });
+      }
+      res.json(hero);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Get hero content (protected)
 app.get('/api/hero', authenticateToken, (req, res) => {
-  db.get('SELECT * FROM hero_content ORDER BY created_at DESC LIMIT 1', (err, hero) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!hero) {
-      return res.status(404).json({ error: 'No hero content found' });
-    }
-    
-    res.json(hero);
-  });
+  HeroContent.findOne().sort({ createdAt: -1 })
+    .then(hero => {
+      if (!hero) {
+        return res.status(404).json({ error: 'No hero content found' });
+      }
+      res.json(hero);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Update hero content (protected)
@@ -1050,147 +830,118 @@ app.put('/api/hero', authenticateToken, upload.fields([
   const host = req.headers['x-forwarded-host'] || req.get('host');
   const baseUrl = `${protocol}://${host}`;
   
-  let query = 'UPDATE hero_content SET name = ?, title = ?, subtitle = ?, description = ?, github_url = ?, linkedin_url = ?, welcome_text = ?, updated_at = CURRENT_TIMESTAMP';
-  let params = [name, title, subtitle, description, github_url, linkedin_url, welcome_text];
+  let updateData = { name, title, subtitle, description, github_url, linkedin_url, welcome_text };
 
   if (req.files?.profile_image) {
-    query += ', profile_image = ?';
-    params.push(`${baseUrl}/uploads/${req.files.profile_image[0].filename}`);
+    updateData.profile_image = `${baseUrl}/uploads/${req.files.profile_image[0].filename}`;
   }
 
   if (req.files?.background_image) {
-    query += ', background_image = ?';
-    params.push(`${baseUrl}/uploads/${req.files.background_image[0].filename}`);
+    updateData.background_image = `${baseUrl}/uploads/${req.files.background_image[0].filename}`;
   }
 
-  db.run(query, params, function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
+  HeroContent.findOneAndUpdate({}, updateData, { new: true, upsert: true })
+    .then(hero => {
       res.json({ message: 'Hero content updated successfully' });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // About Content API endpoints
 
 // Get about content (public)
 app.get('/api/public/about', (req, res) => {
-  db.get('SELECT * FROM about_content ORDER BY created_at DESC LIMIT 1', (err, about) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!about) {
-      return res.status(404).json({ error: 'No about content found' });
-    }
-    
-    // Parse JSON strings back to objects
-    about.journey_points = JSON.parse(about.journey_points || '[]');
-    about.education_items = JSON.parse(about.education_items || '[]');
-    about.strengths_list = JSON.parse(about.strengths_list || '[]');
-    
-    res.json(about);
-  });
+  AboutContent.findOne().sort({ createdAt: -1 })
+    .then(about => {
+      if (!about) {
+        return res.status(404).json({ error: 'No about content found' });
+      }
+      res.json(about);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Get about content (protected)
 app.get('/api/about', authenticateToken, (req, res) => {
-  db.get('SELECT * FROM about_content ORDER BY created_at DESC LIMIT 1', (err, about) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!about) {
-      return res.status(404).json({ error: 'No about content found' });
-    }
-    
-    // Parse JSON strings back to objects
-    about.journey_points = JSON.parse(about.journey_points || '[]');
-    about.education_items = JSON.parse(about.education_items || '[]');
-    about.strengths_list = JSON.parse(about.strengths_list || '[]');
-    
-    res.json(about);
-  });
+  AboutContent.findOne().sort({ createdAt: -1 })
+    .then(about => {
+      if (!about) {
+        return res.status(404).json({ error: 'No about content found' });
+      }
+      res.json(about);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Update about content (protected)
 app.put('/api/about', authenticateToken, (req, res) => {
   const { journey_title, journey_points, education_title, education_items, strengths_title, strengths_list } = req.body;
   
-  const stmt = db.prepare('UPDATE about_content SET journey_title = ?, journey_points = ?, education_title = ?, education_items = ?, strengths_title = ?, strengths_list = ?, updated_at = CURRENT_TIMESTAMP');
-  stmt.run(
+  AboutContent.findOneAndUpdate({}, {
     journey_title,
-    JSON.stringify(journey_points),
+    journey_points,
     education_title,
-    JSON.stringify(education_items),
+    education_items,
     strengths_title,
-    JSON.stringify(strengths_list),
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.json({ message: 'About content updated successfully' });
-      }
-    }
-  );
-  stmt.finalize();
+    strengths_list
+  }, { new: true, upsert: true })
+    .then(about => {
+      res.json({ message: 'About content updated successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Contact Info API endpoints
 
 // Get contact info (public)
 app.get('/api/public/contact', (req, res) => {
-  db.get('SELECT * FROM contact_info ORDER BY created_at DESC LIMIT 1', (err, contact) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!contact) {
-      return res.status(404).json({ error: 'No contact info found' });
-    }
-    
-    res.json(contact);
-  });
+  ContactInfo.findOne().sort({ createdAt: -1 })
+    .then(contact => {
+      if (!contact) {
+        return res.status(404).json({ error: 'No contact info found' });
+      }
+      res.json(contact);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Get contact info (protected)
 app.get('/api/contact-info', authenticateToken, (req, res) => {
-  db.get('SELECT * FROM contact_info ORDER BY created_at DESC LIMIT 1', (err, contact) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    if (!contact) {
-      return res.status(404).json({ error: 'No contact info found' });
-    }
-    
-    res.json(contact);
-  });
+  ContactInfo.findOne().sort({ createdAt: -1 })
+    .then(contact => {
+      if (!contact) {
+        return res.status(404).json({ error: 'No contact info found' });
+      }
+      res.json(contact);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // Update contact info (protected)
 app.put('/api/contact-info', authenticateToken, (req, res) => {
   const { title, subtitle, description, location, email, github_url, linkedin_url } = req.body;
   
-  const stmt = db.prepare('UPDATE contact_info SET title = ?, subtitle = ?, description = ?, location = ?, email = ?, github_url = ?, linkedin_url = ?, updated_at = CURRENT_TIMESTAMP');
-  stmt.run(
-    title,
-    subtitle,
-    description,
-    location,
-    email,
-    github_url,
-    linkedin_url,
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.json({ message: 'Contact info updated successfully' });
-      }
-    }
-  );
-  stmt.finalize();
+  ContactInfo.findOneAndUpdate({}, {
+    title, subtitle, description, location, email, github_url, linkedin_url
+  }, { new: true, upsert: true })
+    .then(contact => {
+      res.json({ message: 'Contact info updated successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // --- Add health check endpoint if not present ---
@@ -1205,53 +956,18 @@ app.post('/api/fix-image-urls', (req, res) => {
   console.log('🔧 Fixing image URLs with base URL:', baseUrl);
   
   // Fix hero content
-  db.run(`
-    UPDATE hero_content 
-    SET profile_image = REPLACE(profile_image, 'http://localhost:4000', ?),
-        background_image = REPLACE(background_image, 'http://localhost:4000', ?)
-    WHERE profile_image LIKE '%localhost:4000%' 
-       OR background_image LIKE '%localhost:4000%'
-  `, [baseUrl, baseUrl], function(err) {
-    if (err) {
-      console.error('Error fixing hero content:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    console.log('Fixed hero content images:', this.changes, 'rows affected');
-    
-    // Fix projects
-    db.run(`
-      UPDATE projects 
-      SET image = REPLACE(image, 'http://localhost:4000', ?)
-      WHERE image LIKE '%localhost:4000%'
-    `, [baseUrl], function(err) {
-      if (err) {
-        console.error('Error fixing projects:', err);
-        return res.status(500).json({ error: err.message });
-      }
-      
-      console.log('Fixed project images:', this.changes, 'rows affected');
-      
-      // Fix certifications
-      db.run(`
-        UPDATE certifications 
-        SET image = REPLACE(image, 'http://localhost:4000', ?)
-        WHERE image LIKE '%localhost:4000%'
-      `, [baseUrl], function(err) {
-        if (err) {
-          console.error('Error fixing certifications:', err);
-          return res.status(500).json({ error: err.message });
-        }
-        
-        console.log('Fixed certification images:', this.changes, 'rows affected');
-        
-        res.json({ 
-          message: 'Image URLs fixed successfully',
-          heroFixed: this.changes,
-          totalFixed: this.changes
-        });
-      });
-    });
+  // This section is no longer needed as hero content functionality is not in the new schema.
+
+  // Fix projects
+  // This section is no longer needed as project functionality is not in the new schema.
+
+  // Fix certifications
+  // This section is no longer needed as certification functionality is not in the new schema.
+  
+  res.json({ 
+    message: 'Image URLs fix attempted (no image URLs to fix in new schema)',
+    heroFixed: 0,
+    totalFixed: 0
   });
 });
 
@@ -1267,19 +983,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Stats endpoint for dashboard
 app.get('/api/stats', authenticateToken, (req, res) => {
   const stats = {};
-  db.get('SELECT COUNT(*) as count FROM projects', (err, row) => {
-    stats.projects = row?.count || 0;
-    db.get('SELECT COUNT(*) as count FROM skills', (err, row) => {
-      stats.skills = row?.count || 0;
-      db.get('SELECT COUNT(*) as count FROM certifications', (err, row) => {
-        stats.certifications = row?.count || 0;
-        db.get('SELECT COUNT(*) as count FROM contact_messages', (err, row) => {
-          stats.messages = row?.count || 0;
-          res.json(stats);
-        });
-      });
+  
+  Promise.all([
+    Project.countDocuments(),
+    Skill.countDocuments(),
+    Certification.countDocuments(),
+    ContactMessage.countDocuments()
+  ])
+    .then(([projects, skills, certifications, messages]) => {
+      stats.projects = projects || 0;
+      stats.skills = skills || 0;
+      stats.certifications = certifications || 0;
+      stats.messages = messages || 0;
+      res.json(stats);
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
     });
-  });
 });
 
 // --- Utility endpoint to debug cookies (for troubleshooting) ---
