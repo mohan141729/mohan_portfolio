@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaReact, FaNodeJs, FaDatabase, FaPython, FaTools, FaJava } from 'react-icons/fa';
 import { SiTailwindcss, SiBootstrap, SiJavascript, SiHtml5, SiCss3, SiGit } from 'react-icons/si';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
+import SectionWrapper from './SectionWrapper';
 
 const skillCategories = [
   {
@@ -156,7 +157,7 @@ const Skills = () => {
   }, {}) : {};
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
+    <SectionWrapper id="skills" gradient="bg-gradient-to-b from-purple-100 via-blue-50 to-green-50">
       <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
       <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">A comprehensive overview of my technical expertise and proficiency levels.</p>
       
@@ -218,7 +219,7 @@ const Skills = () => {
           <p className="text-gray-600">Skills will be displayed here once added.</p>
         </div>
       )}
-    </section>
+    </SectionWrapper>
   );
 };
 

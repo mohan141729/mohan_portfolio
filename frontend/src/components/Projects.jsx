@@ -3,6 +3,7 @@ import { FaExternalLinkAlt, FaGithub, FaEye } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
+import SectionWrapper from './SectionWrapper';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -65,7 +66,7 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+      <SectionWrapper id="projects" gradient="bg-gradient-to-b from-blue-50 via-indigo-50 to-white">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
         <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
         <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
@@ -84,13 +85,13 @@ const Projects = () => {
             </div>
           ))}
         </div>
-      </section>
+      </SectionWrapper>
     );
   }
 
   if (error) {
     return (
-      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+      <SectionWrapper id="projects" gradient="bg-gradient-to-b from-blue-50 via-indigo-50 to-white">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
         <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
         <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
@@ -113,13 +114,13 @@ const Projects = () => {
             </div>
           </div>
         </div>
-      </section>
+      </SectionWrapper>
     );
   }
 
   if (!Array.isArray(projects) || projects.length === 0) {
     return (
-      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
+      <SectionWrapper id="projects" gradient="bg-gradient-to-b from-blue-50 via-indigo-50 to-white">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
         <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
         <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
@@ -137,7 +138,7 @@ const Projects = () => {
             </div>
           </div>
         </div>
-      </section>
+      </SectionWrapper>
     );
   }
 
@@ -150,9 +151,11 @@ const Projects = () => {
   const placeholdersNeeded = totalCards - (1 + otherProjects.length);
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Featured Projects</h2>
-      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
+    <SectionWrapper id="projects" gradient="bg-gradient-to-b from-indigo-100 via-indigo-200 to-purple-100">
+      <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-blue-900 mb-4 tracking-tight px-4 drop-shadow-lg">Featured Projects</h2>
+      <p className="text-lg sm:text-xl font-medium text-center text-indigo-700 mb-10 sm:mb-14 max-w-2xl mx-auto px-4">
+        Here are some of my recent projects that showcase my skills in full-stack development and AI integration.
+      </p>
       <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {/* Featured Project */}
         <div className="mb-6">
@@ -283,7 +286,7 @@ const Projects = () => {
           </Link>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

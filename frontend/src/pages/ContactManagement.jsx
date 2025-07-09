@@ -417,57 +417,63 @@ const ContactManagement = () => {
         ) : messages.length === 0 ? (
           <div className="text-gray-500">No messages found.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-xl">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Email</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Subject</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Message</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {messages.map(msg => (
-                  <tr key={msg._id} className="border-t border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-900">{msg.name}</td>
-                    <td className="px-4 py-2 text-sm text-blue-700 underline"><a href={`mailto:${msg.email}`}>{msg.email}</a></td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{msg.subject || '-'}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700 max-w-xs truncate" title={msg.message}>{msg.message}</td>
-                    <td className="px-4 py-2 text-sm">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${msg.status === 'unread' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{msg.status}</span>
-                    </td>
-                    <td className="px-4 py-2 text-xs text-gray-500">{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '-'}</td>
-                    <td className="px-4 py-2 text-xs">
-                      <button
-                        className="text-blue-600 hover:underline text-xs font-semibold mr-2"
-                        onClick={async () => {
-                          setViewMessage(msg);
-                          await handleMarkAsRead(msg);
-                        }}
-                      >View</button>
-                      <button
-                        className="text-blue-600 hover:underline text-xs font-semibold"
-                        onClick={() => {
-                          setReplyTo(msg);
-                          setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:');
-                          setReplyMessage('');
-                          setReplySuccess('');
-                          setReplyError('');
-                        }}
-                      >Reply</button>
-                      <button
-                        className="text-red-600 hover:underline text-xs font-semibold ml-2"
-                        onClick={() => handleDeleteMessage(msg._id)}
-                      >Delete</button>
-                    </td>
+          <>
+            {/* Cards for mobile and tablets */}
+            <div className="block md:hidden space-y-4">
+              {messages.map(msg => (
+                <div key={msg._id} className="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col gap-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-blue-700">{msg.name}</span>
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${msg.status === 'unread' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{msg.status}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mb-1">{msg.email}</div>
+                  <div className="text-xs text-gray-500 mb-1">{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '-'}</div>
+                  <div className="font-semibold text-sm">Subject: {msg.subject || '-'}</div>
+                  <div className="text-gray-700 text-sm mb-2 line-clamp-3">{msg.message}</div>
+                  <div className="flex gap-2 mt-2">
+                    <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={async () => { setViewMessage(msg); await handleMarkAsRead(msg); }}>View</button>
+                    <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={() => { setReplyTo(msg); setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:'); setReplyMessage(''); setReplySuccess(''); setReplyError(''); }}>Reply</button>
+                    <button className="text-red-600 hover:underline text-xs font-semibold" onClick={() => handleDeleteMessage(msg._id)}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Table for desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200 rounded-xl">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Email</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Subject</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Message</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {messages.map(msg => (
+                    <tr key={msg._id} className="border-t border-gray-100 hover:bg-gray-50">
+                      <td className="px-4 py-2 text-sm text-gray-900">{msg.name}</td>
+                      <td className="px-4 py-2 text-sm text-blue-700 underline"><a href={`mailto:${msg.email}`}>{msg.email}</a></td>
+                      <td className="px-4 py-2 text-sm text-gray-700">{msg.subject || '-'}</td>
+                      <td className="px-4 py-2 text-sm text-gray-700 max-w-xs truncate" title={msg.message}>{msg.message}</td>
+                      <td className="px-4 py-2 text-sm">
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${msg.status === 'unread' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{msg.status}</span>
+                      </td>
+                      <td className="px-4 py-2 text-xs text-gray-500">{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '-'}</td>
+                      <td className="px-4 py-2 text-xs">
+                        <button className="text-blue-600 hover:underline text-xs font-semibold mr-2" onClick={async () => { setViewMessage(msg); await handleMarkAsRead(msg); }}>View</button>
+                        <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={() => { setReplyTo(msg); setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:'); setReplyMessage(''); setReplySuccess(''); setReplyError(''); }}>Reply</button>
+                        <button className="text-red-600 hover:underline text-xs font-semibold ml-2" onClick={() => handleDeleteMessage(msg._id)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

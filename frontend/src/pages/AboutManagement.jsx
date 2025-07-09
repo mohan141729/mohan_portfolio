@@ -160,11 +160,11 @@ const AboutManagement = () => {
   const updateStrength = (index, field, value) => {
     setAboutContent(prev => ({
       ...prev,
-      strengths_list: prev.strengths_list.map((item, i) =>
+      strengths_list: prev.strengths_list.map((item, i) => 
         i === index ? { ...item, [field]: value } : item
-    )
-  }));
-};
+      )
+    }));
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: FaTachometerAlt },

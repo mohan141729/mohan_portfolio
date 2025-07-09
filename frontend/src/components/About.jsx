@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { FaRocket, FaGraduationCap, FaLightbulb } from 'react-icons/fa';
+import SectionWrapper from './SectionWrapper';
 
 const STRENGTH_COLORS = [
   'from-green-400 to-green-600',
@@ -70,13 +71,13 @@ const About = () => {
         color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
       }))
     : content.strengths_list.map((strength, i) => ({
-        name: strength,
-        level: STRENGTH_LEVELS[i % STRENGTH_LEVELS.length],
-        color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
-      }));
+    name: strength,
+    level: STRENGTH_LEVELS[i % STRENGTH_LEVELS.length],
+    color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
+  }));
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="about">
+    <SectionWrapper id="about" gradient="bg-gradient-to-b from-white via-blue-50 to-indigo-100">
       <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-gray-900 mb-12 tracking-tight px-4 drop-shadow-lg">About Me</h2>
       <div className="w-full max-w-5xl flex flex-col gap-12 px-4 sm:px-6">
         {/* Journey Timeline */}
@@ -160,7 +161,7 @@ const About = () => {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

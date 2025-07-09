@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaMapMarkerAlt, FaGithub, FaLinkedin, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { buildApiUrl, getRequestConfig, ENDPOINTS } from '../config/api';
+import SectionWrapper from './SectionWrapper';
 
 const Contact = () => {
   const [contactInfo, setContactInfo] = useState({
@@ -114,7 +115,7 @@ const Contact = () => {
   }
 
   return (
-    <section className="py-16 sm:py-20 bg-white min-h-[80vh]" id="contact">
+    <SectionWrapper id="contact" gradient="bg-gradient-to-b from-blue-50 via-white to-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">{contactInfo?.title || 'Get In Touch'}</h2>
@@ -183,7 +184,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

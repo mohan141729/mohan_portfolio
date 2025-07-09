@@ -4,6 +4,7 @@ import { FaExternalLinkAlt, FaCalendarAlt, FaBuilding } from 'react-icons/fa';
 import { IoClose } from "react-icons/io5";
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
+import SectionWrapper from './SectionWrapper';
 
 const Certifications = () => {
   const [certifications, setCertifications] = useState([]);
@@ -174,10 +175,9 @@ const Certifications = () => {
   }
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="certifications">
+    <SectionWrapper id="certifications" gradient="bg-gradient-to-b from-green-50 via-white to-blue-50">
       <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Certifications & Resume</h2>
       <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Professional certifications and achievements that validate my expertise.</p>
-      
       <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {/* Resume Download Section */}
         <motion.div
@@ -298,7 +298,7 @@ const Certifications = () => {
           </div>
         </div>
       )}
-    </section>
+    </SectionWrapper>
   );
 };
 
