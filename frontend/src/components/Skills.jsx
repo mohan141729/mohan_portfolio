@@ -178,7 +178,7 @@ const Skills = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {categorySkills.map((skill, skillIndex) => (
                 <motion.div
-                  key={skill.id}
+                  key={skill.id || `${category}-${skill.name}-${skillIndex}`}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: (categoryIndex * 0.1) + (skillIndex * 0.05) }}

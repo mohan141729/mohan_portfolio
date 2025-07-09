@@ -334,6 +334,7 @@ const ProjectManagement = () => {
                     onChange={handleInputChange}
                     placeholder="e.g., Frontend, Backend, Fullstack"
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                    required
                   />
                 </div>
 
@@ -442,7 +443,7 @@ const ProjectManagement = () => {
             {project.image && (
               <div className="h-40 overflow-hidden">
                 <img
-                  src={`${buildApiUrl('')}${project.image}`}
+                  src={project.image.startsWith('http') ? project.image : `${buildApiUrl('')}${project.image}`}
                   alt={project.title}
                   className="w-full h-full object-cover"
                 />

@@ -11,6 +11,12 @@ require('dotenv').config();
 
 // 1. Import nodemailer at the top
 const nodemailer = require('nodemailer');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  secure: true,
+  cloudinary_url: process.env.CLOUDINARY_URL
+});
+const streamifier = require('streamifier');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -59,39 +65,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 // File upload configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    // Allow PDF, Word, and image files
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/png'
-    ];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF, Word, or image files are allowed'), false);
-    }
-  }
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://techlearn2005:mohanPortfolio@mohanportfolio.otpcvr7.mongodb.net/portfolio';
@@ -221,6 +195,17 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper function for buffer upload to Cloudinary
+async function uploadBufferToCloudinary(buffer, options) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (result) resolve(result);
+      else reject(error);
+    });
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+}
+
 // API endpoint: Get all projects
 app.get('/api/projects', (req, res) => {
   Project.find().sort({ featured: -1, createdAt: -1 })
@@ -233,50 +218,78 @@ app.get('/api/projects', (req, res) => {
 });
 
 // API endpoint: Create new project (protected)
-app.post('/api/projects', authenticateToken, upload.single('image'), (req, res) => {
-  const { title, description, tech, category, featured, live, github } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+app.post('/api/projects', authenticateToken, upload.single('image'), async (req, res) => {
+  console.log('PROJECT UPLOAD req.file:', req.file);
+  console.log('PROJECT UPLOAD req.body:', req.body);
+  let { title, description, tech, category, featured, live, github } = req.body;
+  if (!category || !category.trim()) {
+    category = 'uncategorized';
+  } else {
+    category = category.trim().toLowerCase();
+  }
 
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
   }
 
-  // If this project is featured, un-feature all others first
-  const doInsert = () => {
-    const newProject = new Project({
-      title, description, tech, category, featured, live, github, image
-    });
-    newProject.save()
-      .then(project => {
-        res.status(201).json({ id: project._id, message: 'Project created successfully' });
-      })
-      .catch(err => {
-        res.status(500).json({ error: err.message });
-    });
+  const doInsert = async () => {
+    try {
+      let imageUrl = null;
+      if (req.file) {
+        const result = await uploadBufferToCloudinary(req.file.buffer, {
+          resource_type: 'auto',
+          folder: 'projects'
+        });
+        imageUrl = result.secure_url;
+      }
+      const newProject = new Project({
+        title, description, tech, category, featured, live, github, image: imageUrl
+      });
+      const savedProject = await newProject.save();
+      res.status(201).json({ id: savedProject._id, message: 'Project created successfully' });
+    } catch (err) {
+      console.error('Error uploading project image to Cloudinary:', err);
+      res.status(500).json({ error: err.message });
+    }
   };
 
   if (featured && (featured === '1' || featured === 1 || featured === true)) {
     Project.updateMany({ _id: { $ne: req.params.id } }, { $set: { featured: false } })
       .then(() => {
-      doInsert();
+        doInsert();
       })
       .catch(err => {
         res.status(500).json({ error: err.message });
-    });
+      });
   } else {
     doInsert();
   }
 });
 
 // API endpoint: Update project (protected)
-app.put('/api/projects/:id', authenticateToken, upload.single('image'), (req, res) => {
+app.put('/api/projects/:id', authenticateToken, upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  const { title, description, tech, featured, live, github } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
-
-  let query = { title, description, tech, featured, live, github };
-  if (image) {
-    query.image = `/uploads/${req.file.filename}`;
+  let { title, description, tech, category, featured, live, github } = req.body;
+  console.log('PROJECT UPDATE req.body:', req.body);
+  if (!category || !category.trim()) {
+    category = 'uncategorized';
+  } else {
+    category = category.trim().toLowerCase();
+  }
+  console.log('PROJECT UPDATE normalized category:', category);
+  let query = { title, description, tech, category, featured, live, github };
+  if (req.file) {
+    try {
+      const result = await uploadBufferToCloudinary(req.file.buffer, {
+        resource_type: 'auto',
+        folder: 'projects'
+      });
+      query.image = result.secure_url;
+    } catch (err) {
+      console.error('Error uploading project image to Cloudinary:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
   }
 
   Project.findByIdAndUpdate(id, { $set: query, updatedAt: Date.now() })
@@ -384,16 +397,23 @@ app.get('/api/certifications', (req, res) => {
 });
 
 // API endpoint: Create certification (protected)
-app.post('/api/certifications', authenticateToken, upload.single('image'), (req, res) => {
+app.post('/api/certifications', authenticateToken, upload.single('image'), async (req, res) => {
+  console.log('CERTIFICATION UPLOAD req.file:', req.file);
+  console.log('CERTIFICATION UPLOAD req.body:', req.body);
   const { name, issuer, issue_date, expiry_date, credential_id, credential_url } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
 
   if (!name || !issuer) {
     return res.status(400).json({ error: 'Name and issuer are required' });
   }
 
+  let imageUrl = null;
+  if (req.file) {
+    const result = await uploadBufferToCloudinary(req.file.buffer, { resource_type: 'auto', folder: 'certifications' });
+    imageUrl = result.secure_url;
+  }
+
   const newCertification = new Certification({
-    name, issuer, issue_date, expiry_date, credential_id, credential_url, image
+    name, issuer, issue_date, expiry_date, credential_id, credential_url, image: imageUrl
   });
 
   newCertification.save()
@@ -402,18 +422,27 @@ app.post('/api/certifications', authenticateToken, upload.single('image'), (req,
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Update certification (protected)
-app.put('/api/certifications/:id', authenticateToken, upload.single('image'), (req, res) => {
+app.put('/api/certifications/:id', authenticateToken, upload.single('image'), async (req, res) => {
   const { id } = req.params;
   const { name, issuer, issue_date, expiry_date, credential_id, credential_url } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
 
   let updateData = { name, issuer, issue_date, expiry_date, credential_id, credential_url };
-  if (image) {
-    updateData.image = `/uploads/${req.file.filename}`;
+  if (req.file) {
+    try {
+      const result = await uploadBufferToCloudinary(req.file.buffer, {
+        resource_type: 'auto',
+        folder: 'certifications'
+      });
+      updateData.image = result.secure_url;
+    } catch (err) {
+      console.error('Error uploading certification image to Cloudinary:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
   }
 
   Certification.findByIdAndUpdate(id, updateData, { new: true })
@@ -425,7 +454,7 @@ app.put('/api/certifications/:id', authenticateToken, upload.single('image'), (r
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Delete certification (protected)
@@ -491,6 +520,21 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
     .catch(err => {
       res.status(500).json({ error: err.message });
   });
+});
+
+// API endpoint: Delete contact message (protected)
+app.delete('/api/contact/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  ContactMessage.findByIdAndDelete(id)
+    .then(message => {
+      if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+      res.json({ message: 'Message deleted successfully' });
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 // 2. Add the reply endpoint after contact endpoints
@@ -704,36 +748,7 @@ app.put('/api/admin/change-email', authenticateToken, (req, res) => {
 });
 
 // Resume upload configuration
-const resumeUpload = multer({
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      const uploadDir = path.join(__dirname, 'uploads');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'resume-' + uniqueSuffix + path.extname(file.originalname));
-    }
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/png'
-    ];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF, Word documents, and images are allowed'), false);
-    }
-  }
-});
+const resumeUpload = multer({ storage: multer.memoryStorage() });
 
 // Create resume table if not exists
 // This section is no longer needed as resume functionality is not in the new schema.
@@ -767,35 +782,45 @@ app.get('/api/public/resume', (req, res) => {
 });
 
 // Upload resume endpoint
-app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), (req, res) => {
+app.post('/api/resume', authenticateToken, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Delete existing resume
-  Resume.deleteMany({})
-    .then(() => {
-    // Insert new resume
-      const newResume = new Resume({
-          filename: req.file.originalname,
-          file_path: `/uploads/${req.file.filename}`,
-        size: req.file.size
-      });
+  try {
+    const result = await uploadBufferToCloudinary(req.file.buffer, {
+      resource_type: 'auto',
+      folder: 'resumes'
+    });
 
-      return newResume.save();
-    })
-    .then(resume => {
-      res.status(201).json({ 
-        id: resume._id, 
-        filename: resume.filename,
-        file_path: resume.file_path,
-        size: resume.size,
-          message: 'Resume uploaded successfully' 
+    // Delete existing resume
+    Resume.deleteMany({})
+      .then(() => {
+      // Insert new resume
+        const newResume = new Resume({
+            filename: req.file.originalname,
+            file_path: result.secure_url,
+          size: req.file.size
         });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-  });
+
+        return newResume.save();
+      })
+      .then(resume => {
+        res.status(201).json({ 
+          id: resume._id, 
+          filename: resume.filename,
+          file_path: resume.file_path,
+          size: resume.size,
+            message: 'Resume uploaded successfully' 
+          });
+      })
+      .catch(err => {
+        res.status(500).json({ error: err.message });
+    });
+  } catch (err) {
+    console.error('Error uploading resume to Cloudinary:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Delete resume endpoint
@@ -807,10 +832,10 @@ app.delete('/api/resume', authenticateToken, (req, res) => {
     }
 
     // Delete file from filesystem
-    const filePath = path.join(__dirname, resume.file_path);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    // const filePath = path.join(__dirname, resume.file_path); // This line is no longer needed
+    // if (fs.existsSync(filePath)) {
+    //   fs.unlinkSync(filePath);
+    // }
 
     // Delete from database
       return Resume.findByIdAndDelete(resume._id);
@@ -857,7 +882,7 @@ app.get('/api/hero', authenticateToken, (req, res) => {
 app.put('/api/hero', authenticateToken, upload.fields([
   { name: 'profile_image', maxCount: 1 },
   { name: 'background_image', maxCount: 1 }
-]), (req, res) => {
+]), async (req, res) => {
   const { name, title, subtitle, description, github_url, linkedin_url, welcome_text } = req.body;
   
   // Get the base URL dynamically
@@ -868,11 +893,31 @@ app.put('/api/hero', authenticateToken, upload.fields([
   let updateData = { name, title, subtitle, description, github_url, linkedin_url, welcome_text };
 
   if (req.files?.profile_image) {
-    updateData.profile_image = `${baseUrl}/uploads/${req.files.profile_image[0].filename}`;
+    try {
+      const result = await uploadBufferToCloudinary(req.files.profile_image[0].buffer, {
+        resource_type: 'auto',
+        folder: 'hero'
+      });
+      updateData.profile_image = result.secure_url;
+    } catch (err) {
+      console.error('Error uploading profile image to Cloudinary:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
   }
 
   if (req.files?.background_image) {
-    updateData.background_image = `${baseUrl}/uploads/${req.files.background_image[0].filename}`;
+    try {
+      const result = await uploadBufferToCloudinary(req.files.background_image[0].buffer, {
+        resource_type: 'auto',
+        folder: 'hero'
+      });
+      updateData.background_image = result.secure_url;
+    } catch (err) {
+      console.error('Error uploading background image to Cloudinary:', err);
+      res.status(500).json({ error: err.message });
+      return;
+    }
   }
 
   HeroContent.findOneAndUpdate({}, updateData, { new: true, upsert: true })

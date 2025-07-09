@@ -17,6 +17,7 @@ const AllProjects = () => {
   }, []);
 
   useEffect(() => {
+    console.log('Fetched projects:', projects);
     filterProjects();
   }, [projects, searchTerm, selectedCategory]);
 
@@ -205,6 +206,7 @@ const AllProjects = () => {
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
             >
               <option value="all">All Categories</option>
+              {categories.length === 0 && <option disabled>No categories available</option>}
               {categories.map((category) => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -255,11 +257,6 @@ const AllProjects = () => {
                 <div className="p-6 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight leading-tight">{project.title}</h3>
-                    {project.category && (
-                      <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded mb-2 border border-blue-200">
-                        {project.category}
-                      </span>
-                    )}
                     <div className="flex gap-2">
                       {project.live && project.live !== '#' && (
                         <a 

@@ -436,7 +436,7 @@ const CertificationManagement = () => {
             {certification.image && (
               <div className="h-40 overflow-hidden">
                 <img
-                  src={`${buildApiUrl('')}${certification.image}`}
+                  src={certification.image.startsWith('http') ? certification.image : `${buildApiUrl('')}${certification.image}`}
                   alt={certification.name}
                   className="w-full h-full object-cover"
                 />
