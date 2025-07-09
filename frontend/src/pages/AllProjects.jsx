@@ -52,25 +52,20 @@ const AllProjects = () => {
     // Filter by category (tech stack)
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(project => {
-        if (!project.tech) return false;
-        const techArray = Array.isArray(project.tech) ? project.tech : project.tech.split(',').map(t => t.trim());
-        return techArray.some(tech => tech.toLowerCase().includes(selectedCategory.toLowerCase()));
+        if (!project.category) return false;
+        return project.category.toLowerCase() === selectedCategory.toLowerCase();
       });
     }
 
     setFilteredProjects(filtered);
   };
 
+  // 1. Get unique categories from the 'category' field
   const getUniqueCategories = () => {
     const categories = new Set();
     projects.forEach(project => {
-      if (project.tech) {
-        const techArray = Array.isArray(project.tech) ? project.tech : project.tech.split(',').map(t => t.trim());
-        techArray.forEach(tech => {
-          if (tech.trim()) {
-            categories.add(tech.trim());
-          }
-        });
+      if (project.category && project.category.trim()) {
+        categories.add(project.category.trim());
       }
     });
     return Array.from(categories).sort();
@@ -209,7 +204,7 @@ const AllProjects = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
             >
-              <option value="all">All Technologies</option>
+              <option value="all">All Categories</option>
               {categories.map((category) => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -259,7 +254,12 @@ const AllProjects = () => {
                 </div>
                 <div className="p-6 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-blue-700 group-hover:text-blue-900 transition-colors duration-200">{project.title}</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight leading-tight">{project.title}</h3>
+                    {project.category && (
+                      <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded mb-2 border border-blue-200">
+                        {project.category}
+                      </span>
+                    )}
                     <div className="flex gap-2">
                       {project.live && project.live !== '#' && (
                         <a 

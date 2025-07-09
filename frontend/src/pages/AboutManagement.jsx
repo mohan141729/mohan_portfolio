@@ -138,10 +138,15 @@ const AboutManagement = () => {
     }));
   };
 
+  // Change strengths_list to be an array of objects: { name, level }
+  // Update addStrength, removeStrength, updateStrength
   const addStrength = () => {
     setAboutContent(prev => ({
       ...prev,
-      strengths_list: [...prev.strengths_list, '']
+      strengths_list: [
+        ...prev.strengths_list,
+        { name: '', level: 80 }
+      ]
     }));
   };
 
@@ -152,14 +157,14 @@ const AboutManagement = () => {
     }));
   };
 
-  const updateStrength = (index, value) => {
+  const updateStrength = (index, field, value) => {
     setAboutContent(prev => ({
       ...prev,
-      strengths_list: prev.strengths_list.map((item, i) => 
-        i === index ? value : item
-      )
-    }));
-  };
+      strengths_list: prev.strengths_list.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+    )
+  }));
+};
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: FaTachometerAlt },
@@ -404,13 +409,22 @@ const AboutManagement = () => {
               
               <div className="space-y-3">
                 {aboutContent.strengths_list.map((strength, index) => (
-                  <div key={index} className="flex gap-2">
+                  <div key={index} className="flex gap-2 items-center">
                     <input
                       type="text"
-                      value={strength}
-                      onChange={(e) => updateStrength(index, e.target.value)}
+                      value={strength.name}
+                      onChange={e => updateStrength(index, 'name', e.target.value)}
                       className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
                       placeholder="Enter strength..."
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={strength.level}
+                      onChange={e => updateStrength(index, 'level', Number(e.target.value))}
+                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
+                      placeholder="Level %"
                     />
                     <button
                       type="button"

@@ -14,22 +14,29 @@ import {
 } from 'react-icons/fa';
 import { buildApiUrl, getRequestConfig } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
+import notificationSound from '../assets/notification.mp3'; // Place a notification.mp3 in assets
 
 const Admin = () => {
   const [stats, setStats] = useState({ projects: 0, skills: 0, certifications: 0, messages: 0 });
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        console.log('Fetching stats from:', buildApiUrl('/api/stats'));
         const response = await fetch(buildApiUrl('/api/stats'), getRequestConfig());
-        console.log('Stats fetch response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('Stats data:', data);
           setStats(data);
+          // Fetch unread messages count
+          const messagesResponse = await fetch(buildApiUrl('/api/contact'), getRequestConfig());
+          if (messagesResponse.ok) {
+            const messages = await messagesResponse.json();
+            const unread = Array.isArray(messages) ? messages.filter(m => m.status !== 'read').length : 0;
+            setUnreadCount(unread);
+          }
         } else if (response.status === 401) {
           setStats({ projects: '-', skills: '-', certifications: '-', messages: '-' });
           alert('You are not authorized. Please log in as admin.');
@@ -46,8 +53,39 @@ const Admin = () => {
     if (isAuthenticated) fetchStats();
   }, [isAuthenticated]);
 
+  // Show notification only if there are unread messages
+  useEffect(() => {
+    if (isAuthenticated && !loading && unreadCount > 0) {
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification('Unread Messages', {
+          body: `You have ${unreadCount} unread message${unreadCount > 1 ? 's' : ''}.`,
+          icon: '/vite.svg'
+        });
+      }
+      // Play sound
+      const audio = new Audio(notificationSound);
+      audio.play();
+      // Show toast message
+      setToast(`You have ${unreadCount} unread message${unreadCount > 1 ? 's' : ''}.`);
+      setTimeout(() => setToast(''), 5000);
+    }
+  }, [isAuthenticated, loading, unreadCount]);
+
+  // Request notification permission on mount if not already granted
+  useEffect(() => {
+    if (window.Notification && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   return (
     <>
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
+          {toast}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6 sm:mb-8">
         <div>

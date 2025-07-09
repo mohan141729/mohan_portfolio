@@ -9,6 +9,9 @@ const multer = require('multer');
 const fs = require('fs');
 require('dotenv').config();
 
+// 1. Import nodemailer at the top
+const nodemailer = require('nodemailer');
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -109,6 +112,7 @@ const projectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: String,
   tech: [String],
+  category: String, // <-- add this line
   featured: { type: Boolean, default: false },
   live: String,
   github: String,
@@ -230,7 +234,7 @@ app.get('/api/projects', (req, res) => {
 
 // API endpoint: Create new project (protected)
 app.post('/api/projects', authenticateToken, upload.single('image'), (req, res) => {
-  const { title, description, tech, featured, live, github } = req.body;
+  const { title, description, tech, category, featured, live, github } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
   if (!title) {
@@ -240,7 +244,7 @@ app.post('/api/projects', authenticateToken, upload.single('image'), (req, res) 
   // If this project is featured, un-feature all others first
   const doInsert = () => {
     const newProject = new Project({
-      title, description, tech, featured, live, github, image
+      title, description, tech, category, featured, live, github, image
     });
     newProject.save()
       .then(project => {
@@ -487,6 +491,37 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
     .catch(err => {
       res.status(500).json({ error: err.message });
   });
+});
+
+// 2. Add the reply endpoint after contact endpoints
+app.post('/api/contact/reply', authenticateToken, async (req, res) => {
+  const { to, subject, message } = req.body;
+  if (!to || !subject || !message) {
+    return res.status(400).json({ error: 'To, subject, and message are required' });
+  }
+  try {
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    // Send mail
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      text: message,
+    });
+    res.json({ message: 'Reply sent successfully' });
+  } catch (err) {
+    console.error('Error sending reply:', err);
+    res.status(500).json({ error: 'Failed to send reply' });
+  }
 });
 
 // --- Add root route to avoid 404 on backend root ---

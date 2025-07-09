@@ -120,6 +120,7 @@ async function seedData() {
           title: 'Learning Path Generator',
           description: 'Full-stack AI-powered platform that generates personalized learning paths from Beginner to Advanced levels using Gemini API.',
           tech: ['React', 'Tailwind', 'Node.js', 'SQLite', 'Gemini API'],
+          category: 'Fullstack',
           featured: true,
           live: '#',
           github: '#'
@@ -128,6 +129,7 @@ async function seedData() {
           title: 'Food Munch',
           description: 'Mobile-first food listing website with responsive design and modern UI components.',
           tech: ['HTML', 'CSS', 'Bootstrap'],
+          category: 'Frontend',
           featured: false,
           live: '#',
           github: '#'
@@ -136,6 +138,7 @@ async function seedData() {
           title: 'Tourism Website',
           description: 'Destination galleries with virtual tours, Bootstrap carousel, and embedded videos.',
           tech: ['HTML', 'CSS', 'Bootstrap', 'JavaScript'],
+          category: 'Frontend',
           featured: false,
           live: '#',
           github: '#'

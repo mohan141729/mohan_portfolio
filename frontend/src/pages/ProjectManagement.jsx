@@ -37,6 +37,7 @@ const ProjectManagement = () => {
     title: '',
     description: '',
     tech: '',
+    category: '',
     featured: false,
     live: '',
     github: '',
@@ -99,6 +100,7 @@ const ProjectManagement = () => {
       title: '',
       description: '',
       tech: '',
+      category: '',
       featured: false,
       live: '',
       github: '',
@@ -168,6 +170,7 @@ const ProjectManagement = () => {
       title: project.title,
       description: project.description,
       tech: Array.isArray(project.tech) ? project.tech.join(', ') : project.tech,
+      category: project.category || '',
       featured: featuredValue,
       live: project.live,
       github: project.github,
@@ -318,6 +321,20 @@ const ProjectManagement = () => {
                       className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Frontend, Backend, Fullstack"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  />
                 </div>
 
                 <div>

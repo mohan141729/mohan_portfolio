@@ -62,11 +62,18 @@ const About = () => {
   };
 
   const content = aboutContent || defaultAbout;
-  const strengths = content.strengths_list.map((strength, i) => ({
-    name: strength,
-    level: STRENGTH_LEVELS[i % STRENGTH_LEVELS.length],
-    color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
-  }));
+  // Update strengths mapping to use object structure
+  const strengths = Array.isArray(content.strengths_list) && content.strengths_list.length > 0 && typeof content.strengths_list[0] === 'object'
+    ? content.strengths_list.map((strength, i) => ({
+        name: strength.name,
+        level: strength.level ?? STRENGTH_LEVELS[i % STRENGTH_LEVELS.length],
+        color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
+      }))
+    : content.strengths_list.map((strength, i) => ({
+        name: strength,
+        level: STRENGTH_LEVELS[i % STRENGTH_LEVELS.length],
+        color: STRENGTH_COLORS[i % STRENGTH_COLORS.length],
+      }));
 
   return (
     <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="about">

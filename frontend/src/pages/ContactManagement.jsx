@@ -39,11 +39,46 @@ const ContactManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  // 1. Add state for messages and loading
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [messagesError, setMessagesError] = useState('');
+  // 1. Add state for reply modal
+  const [replyTo, setReplyTo] = useState(null);
+  const [replySubject, setReplySubject] = useState('');
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replyLoading, setReplyLoading] = useState(false);
+  const [replySuccess, setReplySuccess] = useState('');
+  const [replyError, setReplyError] = useState('');
+  // 1. Add state for viewing a message
+  const [viewMessage, setViewMessage] = useState(null);
 
   const { logout } = useAuth();
 
+  // 2. Fetch messages on mount
   useEffect(() => {
     fetchContactInfo();
+    fetchMessages();
+  }, []);
+
+  // 1. useEffect to show notification for unread messages
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const unreadCount = messages.filter(m => m.status !== 'read').length;
+      if (unreadCount > 0 && window.Notification && Notification.permission === 'granted') {
+        new Notification('Unread Messages', {
+          body: `You have ${unreadCount} unread message${unreadCount > 1 ? 's' : ''}.`,
+          icon: '/vite.svg'
+        });
+      }
+    }
+  }, [messages]);
+
+  // 2. Request notification permission on mount if not already granted
+  useEffect(() => {
+    if (window.Notification && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
   }, []);
 
   const fetchContactInfo = async () => {
@@ -57,6 +92,24 @@ const ContactManagement = () => {
       console.error('Error fetching contact info:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    setMessagesLoading(true);
+    setMessagesError('');
+    try {
+      const response = await fetch(buildApiUrl(ENDPOINTS.CONTACT_MESSAGES), getRequestConfig());
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(Array.isArray(data) ? data : []);
+      } else {
+        setMessagesError('Failed to fetch messages');
+      }
+    } catch (err) {
+      setMessagesError('Network error');
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -88,6 +141,40 @@ const ContactManagement = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // 1. Add delete and mark as read logic
+  const handleMarkAsRead = async (msg) => {
+    if (msg.status !== 'read') {
+      try {
+        await fetch(buildApiUrl(`/api/contact/${msg._id}`), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'read' })
+        });
+        setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, status: 'read' } : m));
+      } catch (err) {
+        // Optionally show error
+      }
+    }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      const response = await fetch(buildApiUrl(`/api/contact/${msgId}`), {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (response.ok) {
+        setMessages(prev => prev.filter(m => m._id !== msgId));
+      } else {
+        // Optionally show error
+      }
+    } catch (err) {
+      // Optionally show error
+    }
   };
 
   const navItems = [
@@ -317,6 +404,144 @@ const ContactManagement = () => {
           </button>
         </motion.div>
       </form>
+
+      {/* User Contact Messages Section */}
+      <div className="mt-10">
+        <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <FaEnvelope className="text-red-500" /> User Contact Messages
+        </h2>
+        {messagesLoading ? (
+          <div className="text-gray-500">Loading messages...</div>
+        ) : messagesError ? (
+          <div className="text-red-500">{messagesError}</div>
+        ) : messages.length === 0 ? (
+          <div className="text-gray-500">No messages found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-xl">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Email</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Subject</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Message</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {messages.map(msg => (
+                  <tr key={msg._id} className="border-t border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-2 text-sm text-gray-900">{msg.name}</td>
+                    <td className="px-4 py-2 text-sm text-blue-700 underline"><a href={`mailto:${msg.email}`}>{msg.email}</a></td>
+                    <td className="px-4 py-2 text-sm text-gray-700">{msg.subject || '-'}</td>
+                    <td className="px-4 py-2 text-sm text-gray-700 max-w-xs truncate" title={msg.message}>{msg.message}</td>
+                    <td className="px-4 py-2 text-sm">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${msg.status === 'unread' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{msg.status}</span>
+                    </td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '-'}</td>
+                    <td className="px-4 py-2 text-xs">
+                      <button
+                        className="text-blue-600 hover:underline text-xs font-semibold mr-2"
+                        onClick={async () => {
+                          setViewMessage(msg);
+                          await handleMarkAsRead(msg);
+                        }}
+                      >View</button>
+                      <button
+                        className="text-blue-600 hover:underline text-xs font-semibold"
+                        onClick={() => {
+                          setReplyTo(msg);
+                          setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:');
+                          setReplyMessage('');
+                          setReplySuccess('');
+                          setReplyError('');
+                        }}
+                      >Reply</button>
+                      <button
+                        className="text-red-600 hover:underline text-xs font-semibold ml-2"
+                        onClick={() => handleDeleteMessage(msg._id)}
+                      >Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Reply Modal */}
+      {replyTo && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setReplyTo(null)}><FaTimes /></button>
+            <h3 className="text-lg font-bold mb-2">Reply to {replyTo.name}</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setReplyLoading(true);
+              setReplySuccess('');
+              setReplyError('');
+              try {
+                const response = await fetch(buildApiUrl('/api/contact/reply'), {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    to: replyTo.email,
+                    subject: replySubject,
+                    message: replyMessage
+                  })
+                });
+                if (response.ok) {
+                  setReplySuccess('Reply sent successfully!');
+                  setReplyMessage('');
+                } else {
+                  const data = await response.json();
+                  setReplyError(data.error || 'Failed to send reply');
+                }
+              } catch (err) {
+                setReplyError('Network error');
+              } finally {
+                setReplyLoading(false);
+              }
+            }} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1">To</label>
+                <input type="email" value={replyTo.email} disabled className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Subject</label>
+                <input type="text" value={replySubject} onChange={e => setReplySubject(e.target.value)} className="w-full px-3 py-2 border rounded" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Message</label>
+                <textarea value={replyMessage} onChange={e => setReplyMessage(e.target.value)} className="w-full px-3 py-2 border rounded" rows={4} required />
+              </div>
+              {replySuccess && <div className="text-green-600 text-xs">{replySuccess}</div>}
+              {replyError && <div className="text-red-600 text-xs">{replyError}</div>}
+              <div className="flex gap-2 justify-end">
+                <button type="button" className="px-3 py-1 rounded bg-gray-200 text-gray-700" onClick={() => setReplyTo(null)}>Cancel</button>
+                <button type="submit" className="px-3 py-1 rounded bg-blue-600 text-white" disabled={replyLoading}>{replyLoading ? 'Sending...' : 'Send Reply'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Add a modal to view the full message */}
+      {viewMessage && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setViewMessage(null)}><FaTimes /></button>
+            <h3 className="text-lg font-bold mb-2">Message from {viewMessage.name}</h3>
+            <div className="mb-2 text-xs text-gray-500">{viewMessage.email} | {viewMessage.createdAt ? new Date(viewMessage.createdAt).toLocaleString() : '-'}</div>
+            <div className="mb-2 text-sm font-semibold">Subject: {viewMessage.subject || '-'}</div>
+            <div className="mb-4 text-gray-800 whitespace-pre-line">{viewMessage.message}</div>
+            <button className="px-4 py-2 rounded bg-blue-600 text-white" onClick={() => setViewMessage(null)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
