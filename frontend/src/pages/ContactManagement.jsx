@@ -43,13 +43,6 @@ const ContactManagement = () => {
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [messagesError, setMessagesError] = useState('');
-  // 1. Add state for reply modal
-  const [replyTo, setReplyTo] = useState(null);
-  const [replySubject, setReplySubject] = useState('');
-  const [replyMessage, setReplyMessage] = useState('');
-  const [replyLoading, setReplyLoading] = useState(false);
-  const [replySuccess, setReplySuccess] = useState('');
-  const [replyError, setReplyError] = useState('');
   // 1. Add state for viewing a message
   const [viewMessage, setViewMessage] = useState(null);
 
@@ -432,7 +425,6 @@ const ContactManagement = () => {
                   <div className="text-gray-700 text-sm mb-2 line-clamp-3">{msg.message}</div>
                   <div className="flex gap-2 mt-2">
                     <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={async () => { setViewMessage(msg); await handleMarkAsRead(msg); }}>View</button>
-                    <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={() => { setReplyTo(msg); setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:'); setReplyMessage(''); setReplySuccess(''); setReplyError(''); }}>Reply</button>
                     <button className="text-red-600 hover:underline text-xs font-semibold" onClick={() => handleDeleteMessage(msg._id)}>Delete</button>
                   </div>
                 </div>
@@ -465,7 +457,6 @@ const ContactManagement = () => {
                       <td className="px-4 py-2 text-xs text-gray-500">{msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '-'}</td>
                       <td className="px-4 py-2 text-xs">
                         <button className="text-blue-600 hover:underline text-xs font-semibold mr-2" onClick={async () => { setViewMessage(msg); await handleMarkAsRead(msg); }}>View</button>
-                        <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={() => { setReplyTo(msg); setReplySubject(msg.subject ? `Re: ${msg.subject}` : 'Re:'); setReplyMessage(''); setReplySuccess(''); setReplyError(''); }}>Reply</button>
                         <button className="text-red-600 hover:underline text-xs font-semibold ml-2" onClick={() => handleDeleteMessage(msg._id)}>Delete</button>
                       </td>
                     </tr>
@@ -476,64 +467,6 @@ const ContactManagement = () => {
           </>
         )}
       </div>
-
-      {/* Reply Modal */}
-      {replyTo && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setReplyTo(null)}><FaTimes /></button>
-            <h3 className="text-lg font-bold mb-2">Reply to {replyTo.name}</h3>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              setReplyLoading(true);
-              setReplySuccess('');
-              setReplyError('');
-              try {
-                const response = await fetch(buildApiUrl('/api/contact/reply'), {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    to: replyTo.email,
-                    subject: replySubject,
-                    message: replyMessage
-                  })
-                });
-                if (response.ok) {
-                  setReplySuccess('Reply sent successfully!');
-                  setReplyMessage('');
-                } else {
-                  const data = await response.json();
-                  setReplyError(data.error || 'Failed to send reply');
-                }
-              } catch (err) {
-                setReplyError('Network error');
-              } finally {
-                setReplyLoading(false);
-              }
-            }} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold mb-1">To</label>
-                <input type="email" value={replyTo.email} disabled className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1">Subject</label>
-                <input type="text" value={replySubject} onChange={e => setReplySubject(e.target.value)} className="w-full px-3 py-2 border rounded" required />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1">Message</label>
-                <textarea value={replyMessage} onChange={e => setReplyMessage(e.target.value)} className="w-full px-3 py-2 border rounded" rows={4} required />
-              </div>
-              {replySuccess && <div className="text-green-600 text-xs">{replySuccess}</div>}
-              {replyError && <div className="text-red-600 text-xs">{replyError}</div>}
-              <div className="flex gap-2 justify-end">
-                <button type="button" className="px-3 py-1 rounded bg-gray-200 text-gray-700" onClick={() => setReplyTo(null)}>Cancel</button>
-                <button type="submit" className="px-3 py-1 rounded bg-blue-600 text-white" disabled={replyLoading}>{replyLoading ? 'Sending...' : 'Send Reply'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* 3. Add a modal to view the full message */}
       {viewMessage && (
