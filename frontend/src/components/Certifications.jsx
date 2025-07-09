@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FaExternalLinkAlt, FaCalendarAlt, FaBuilding } from 'react-icons/fa';
+import { IoClose } from "react-icons/io5";
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -9,6 +10,12 @@ const Certifications = () => {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const scrollRef = useRef(null);
+  const [activeBubble, setActiveBubble] = useState(0);
+  const cardWidth = 288; // w-72 in px
+  const gap = 24; // gap-6 in px
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
     fetchCertifications();
@@ -69,6 +76,71 @@ const Certifications = () => {
     return new Date(expiryDate) < new Date();
   };
 
+  // Bubble logic
+  const getBubbleCount = () => {
+    if (!Array.isArray(certifications) || certifications.length === 0) return 0;
+    const visibleCards = Math.floor((window.innerWidth - 64) / (cardWidth + gap));
+    return Math.max(1, certifications.length - visibleCards + 1);
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const visibleCards = Math.floor((window.innerWidth - 64) / (cardWidth + gap));
+    const bubble = Math.round(scrollLeft / (cardWidth + gap));
+    setActiveBubble(Math.min(bubble, getBubbleCount() - 1));
+  };
+
+  useEffect(() => {
+    const ref = scrollRef.current;
+    if (!ref) return;
+    ref.addEventListener('scroll', handleScroll);
+    return () => ref.removeEventListener('scroll', handleScroll);
+  }, [certifications]);
+
+  // Infinite auto-scroll logic
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !Array.isArray(certifications) || certifications.length === 0) return;
+
+    let isHovered = false;
+    let scrollAmount = 1; // px per tick
+    let scrollInterval;
+
+    // Duplicate cards for seamless looping
+    const scrollContent = () => {
+      if (isHovered) return;
+      if (container.scrollLeft >= container.scrollWidth / 2) {
+        // Reset to start of first set
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += scrollAmount;
+      }
+    };
+
+    scrollInterval = setInterval(scrollContent, 16); // ~60fps
+
+    // Pause on hover
+    const handleMouseEnter = () => { isHovered = true; };
+    const handleMouseLeave = () => { isHovered = false; };
+    container.addEventListener('mouseenter', handleMouseEnter);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      clearInterval(scrollInterval);
+      container.removeEventListener('mouseenter', handleMouseEnter);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [certifications]);
+
+  // Modal close handler
+  const handleModalClose = (e) => {
+    if (e.target.id === 'cert-modal-overlay' || e.target.id === 'cert-modal-close') {
+      setModalOpen(false);
+      setModalImage(null);
+    }
+  };
+
   if (loading) {
     return (
       <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="certifications">
@@ -127,80 +199,72 @@ const Certifications = () => {
           </button>
         </motion.div>
 
-        {/* Certifications Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          {Array.isArray(certifications) && certifications.map((certification, index) => (
-            <motion.div
-              key={certification.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300"
-            >
-              {certification.image && (
-                <div className="h-40 sm:h-48 overflow-hidden">
+        {/* Certifications Horizontal Scroll Row */}
+        <div className="w-full overflow-x-auto pb-2 scrollbar-hide" ref={scrollRef} style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <div className="flex gap-6 sm:gap-8 px-2 sm:px-4" style={{ WebkitOverflowScrolling: 'touch', minWidth: '100%' }}>
+            {/* Duplicate cards for infinite scroll */}
+            {Array.isArray(certifications) && [...certifications, ...certifications].map((certification, index) => (
+              <motion.div
+                key={certification.id + '-' + index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (index % certifications.length) * 0.1 }}
+                className="relative group rounded-2xl shadow-xl border border-gray-200 overflow-hidden bg-white/80 hover:shadow-2xl transition-all duration-300 w-72 h-80 flex-shrink-0 flex flex-col justify-center items-center cursor-pointer"
+                onClick={() => {
+                  if (certification.image) {
+                    setModalImage(getImageUrl(certification.image));
+                    setModalOpen(true);
+                  }
+                }}
+              >
+                {/* Certificate Image */}
+                {certification.image ? (
                   <img
                     src={getImageUrl(certification.image)}
                     alt={certification.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                   />
-                </div>
-              )}
-              
-              <div className="p-4 sm:p-6">
-                <div className="flex items-start justify-between mb-3 sm:mb-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">{certification.name}</h3>
-                  {certification.expiry_date && isExpired(certification.expiry_date) && (
-                    <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
-                      Expired
-                    </span>
-                  )}
-                </div>
-                
-                <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <FaBuilding size={14} />
-                    <span className="text-xs sm:text-sm">{certification.issuer}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <FaCalendarAlt size={14} />
-                    <span className="text-xs sm:text-sm">
-                      Issued: {formatDate(certification.issue_date)}
-                    </span>
-                  </div>
-                  
-                  {certification.expiry_date && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <FaCalendarAlt size={14} />
-                      <span className={`text-xs sm:text-sm ${isExpired(certification.expiry_date) ? 'text-red-600' : ''}`}>
-                        Expires: {formatDate(certification.expiry_date)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {certification.credential_id && (
-                    <div className="text-xs sm:text-sm text-gray-500">
-                      ID: {certification.credential_id}
-                    </div>
-                  )}
-                </div>
-                
-                {certification.credential_url && (
-                  <a
-                    href={certification.credential_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
-                  >
-                    <FaExternalLinkAlt size={12} />
-                    View Credential
-                  </a>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl bg-gradient-to-br from-blue-50 to-indigo-100">No Image</div>
                 )}
-            </div>
-            </motion.div>
-          ))}
+                {/* Overlay with details on hover */}
+                <div className="absolute inset-0 bg-black/70 bg-opacity-80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 text-white">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 text-center">{certification.name}</h3>
+                  {certification.expiry_date && isExpired(certification.expiry_date) && (
+                    <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full mb-2">Expired</span>
+                  )}
+                  <div className="space-y-1 text-sm mb-2 text-center">
+                    <div className="flex items-center gap-2 justify-center">
+                      <FaBuilding size={14} />
+                      <span>{certification.issuer}</span>
+                    </div>
+                    <div className="flex items-center gap-2 justify-center">
+                      <FaCalendarAlt size={14} />
+                      <span>Issued: {formatDate(certification.issue_date)}</span>
+                    </div>
+                    {certification.expiry_date && (
+                      <div className="flex items-center gap-2 justify-center">
+                        <FaCalendarAlt size={14} />
+                        <span className={`${isExpired(certification.expiry_date) ? 'text-red-400' : ''}`}>Expires: {formatDate(certification.expiry_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
+        {/* Bubble Indicators */}
+        {getBubbleCount() > 1 && (
+          <div className="flex justify-center mt-4 gap-2">
+            {Array.from({ length: getBubbleCount() }).map((_, idx) => (
+              <span
+                key={idx}
+                className={`w-3 h-3 rounded-full ${activeBubble === idx ? 'bg-blue-500' : 'bg-gray-300'} transition-colors duration-200`}
+              />
+            ))}
+          </div>
+        )}
 
         {(!Array.isArray(certifications) || certifications.length === 0) && (
           <div className="text-center py-12">
@@ -209,9 +273,33 @@ const Certifications = () => {
             <p className="text-gray-600">Certifications will be displayed here once added.</p>
           </div>
         )}
-    </div>
-  </section>
-);
+      </div>
+      {/* Modal for certificate image */}
+      {modalOpen && (
+        <div
+          id="cert-modal-overlay"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-300"
+          onClick={handleModalClose}
+        >
+          <div className="relative max-w-3xl w-full mx-4">
+            <button
+              id="cert-modal-close"
+              className="absolute top-2 right-2 text-black text-3xl rounded-full w-10 h-10 flex items-center justify-center hover:bg-gray-200 transition"
+              onClick={handleModalClose}
+              aria-label="Close"
+            >
+              <IoClose  className='text-black'/>
+            </button>
+            <img
+              src={modalImage}
+              alt="Certificate Large"
+              className="w-full h-auto max-h-[80vh] rounded-2xl shadow-2xl border-4 border-white object-contain bg-white"
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  );
 };
 
 export default Certifications; 

@@ -143,7 +143,11 @@ const Projects = () => {
 
   // Find featured project (featured = 1) or use the first project
   const featuredProject = projects.find(p => p.featured === 1) || projects[0];
-  const otherProjects = projects.filter(p => p.id !== featuredProject.id).slice(0, 2);
+  const otherProjects = projects
+    .filter(p => (p._id || p.id) !== (featuredProject._id || featuredProject.id))
+    .slice(0, 2);
+  const totalCards = 3;
+  const placeholdersNeeded = totalCards - (1 + otherProjects.length);
 
   return (
     <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="projects">
@@ -151,121 +155,62 @@ const Projects = () => {
       <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Here are some of my recent projects that showcase my skills in full-stack development and AI integration.</p>
       <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {/* Featured Project */}
-        {featuredProject && (
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300">
-            <div className="flex flex-col">
-              <div className="relative">
-                {renderProjectImage(featuredProject)}
-                <div className="placeholder-img" style={{ display: !featuredProject.image || featuredProject.image.trim() === '' ? 'flex' : 'none' }}>
-                  {placeholderImg}
-                </div>
-                <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-                  Featured
-                </span>
-              </div>
-              <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{featuredProject.title}</h3>
-                  <div className="flex gap-3">
-                    {featuredProject.live && featuredProject.live !== '#' && (
-                      <a 
-                        href={featuredProject.live} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-gray-500 hover:text-blue-500 transition-colors p-2 hover:bg-blue-50 rounded-lg"
-                        title="View Live"
-                      >
-                        <FaExternalLinkAlt />
-                      </a>
-                    )}
-                    {featuredProject.github && featuredProject.github !== '#' && (
-                      <a 
-                        href={featuredProject.github} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-50 rounded-lg"
-                        title="View Code"
-                      >
-                        <FaGithub />
-                      </a>
-                    )}
-                  </div>
-                </div>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{featuredProject.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {featuredProject.tech && Array.isArray(featuredProject.tech) ? featuredProject.tech.map((tech, index) => (
-                    <span 
-                      key={index} 
-                      className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
-                    >
-                      {tech.trim()}
-                    </span>
-                  )) : (featuredProject.tech ? featuredProject.tech.split(',').filter(Boolean).map((tech, index) => (
-                    <span 
-                      key={index} 
-                      className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
-                    >
-                      {tech.trim()}
-                    </span>
-                  )) : [])}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Other Projects */}
-        {otherProjects.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-            {otherProjects.map((project) => (
-              <div key={project.id} className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-300">
+        <div className="mb-6">
+          {featuredProject ? (
+            <div className="relative bg-gradient-to-br from-white via-blue-50 to-indigo-100 rounded-2xl shadow-2xl shadow-blue-100 border border-blue-100 overflow-hidden hover:shadow-[0_8px_40px_0_rgba(59,130,246,0.15)] hover:-translate-y-1 transition-all duration-300">
+              <div className="flex flex-col">
                 <div className="relative">
-                  {renderProjectImage(project)}
-                  <div className="placeholder-img" style={{ display: !project.image || project.image.trim() === '' ? 'flex' : 'none' }}>
+                  {renderProjectImage(featuredProject)}
+                  <div className="placeholder-img" style={{ display: !featuredProject.image || featuredProject.image.trim() === '' ? 'flex' : 'none' }}>
                     {placeholderImg}
                   </div>
+                  <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                    Featured
+                  </span>
                 </div>
-                <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 flex-1">
+                <div className="p-6 flex flex-col gap-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">{project.title}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight leading-tight">{featuredProject.title}</h3>
                     <div className="flex gap-3">
-                      {project.live && project.live !== '#' && (
+                      {featuredProject.live && featuredProject.live !== '#' && (
                         <a 
-                          href={project.live} 
+                          href={featuredProject.live} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="text-gray-500 hover:text-blue-500 transition-colors p-2 hover:bg-blue-50 rounded-lg"
-                          title="View Live"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                          title="View Live Demo"
                         >
                           <FaExternalLinkAlt />
+                          <span className="hidden sm:inline">Live Demo</span>
                         </a>
                       )}
-                      {project.github && project.github !== '#' && (
+                      {featuredProject.github && featuredProject.github !== '#' && (
                         <a 
-                          href={project.github} 
+                          href={featuredProject.github} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-50 rounded-lg"
-                          title="View Code"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                          title="View Code on GitHub"
                         >
                           <FaGithub />
+                          <span className="hidden sm:inline">GitHub</span>
                         </a>
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-600 leading-relaxed flex-1 text-sm sm:text-base">{project.description}</p>
+                  <p className="text-gray-700 leading-relaxed text-base sm:text-lg mb-2">{featuredProject.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    {project.tech && Array.isArray(project.tech) ? project.tech.map((tech, index) => (
+                    {featuredProject.tech && Array.isArray(featuredProject.tech) ? featuredProject.tech.map((tech, index) => (
                       <span 
                         key={index} 
-                        className="bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 text-xs font-semibold px-3 py-1 rounded-md border border-gray-200"
+                        className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
                       >
                         {tech.trim()}
                       </span>
-                    )) : (project.tech ? project.tech.split(',').filter(Boolean).map((tech, index) => (
+                    )) : (featuredProject.tech ? featuredProject.tech.split(',').filter(Boolean).map((tech, index) => (
                       <span 
                         key={index} 
-                        className="bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700 text-xs font-semibold px-3 py-1 rounded-md border border-gray-200"
+                        className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-md border border-blue-200"
                       >
                         {tech.trim()}
                       </span>
@@ -273,22 +218,70 @@ const Projects = () => {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* View More Projects Button */}
-        {projects.length > 3 && (
-          <div className="flex justify-center mt-8 sm:mt-12">
-            <Link
-              to="/all-projects"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-              <FaEye className="mr-2" />
-              View All Projects ({projects.length})
-            </Link>
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="bg-white/80 rounded-2xl shadow-xl border border-gray-200 h-56 flex items-center justify-center text-gray-300 text-2xl font-bold">No Featured Project</div>
+          )}
+        </div>
+        {/* Other Projects (2 cards) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          {otherProjects.map((project, idx) => (
+            <div key={project._id || project.id || idx} className="relative bg-gradient-to-br from-white via-blue-50 to-indigo-100 rounded-2xl shadow-xl shadow-blue-100 border border-blue-100 overflow-hidden hover:shadow-[0_8px_40px_0_rgba(59,130,246,0.10)] hover:-translate-y-1 transition-all duration-300">
+              <div className="flex flex-col">
+                <div className="relative">
+                  {renderProjectImage(project)}
+                  <div className="placeholder-img" style={{ display: !project.image || project.image.trim() === '' ? 'flex' : 'none' }}>
+                    {placeholderImg}
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col gap-3">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1 tracking-tight leading-tight">{project.title}</h3>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-3">{project.description}</p>
+                  <div className="flex gap-3 mt-2">
+                    {project.live && project.live !== '#' && (
+                      <a 
+                        href={project.live} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                        title="View Live Demo"
+                      >
+                        <FaExternalLinkAlt />
+                        <span className="hidden sm:inline">Live Demo</span>
+                      </a>
+                    )}
+                    {project.github && project.github !== '#' && (
+                      <a 
+                        href={project.github} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                        title="View Code on GitHub"
+                      >
+                        <FaGithub />
+                        <span className="hidden sm:inline">GitHub</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {/* Placeholder cards if less than 2 other projects */}
+          {Array.from({ length: placeholdersNeeded }).map((_, idx) => (
+            <div key={idx} className="bg-white/80 rounded-2xl shadow-xl border border-gray-200 h-56 flex items-center justify-center text-gray-300 text-2xl font-bold">No Project</div>
+          ))}
+        </div>
+        {/* All Projects Button */}
+        <div className="flex justify-center mt-10">
+          <Link
+            to="/all-projects"
+            className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg"
+          >
+            <FaEye className="mr-2" />
+            All Projects
+          </Link>
+        </div>
       </div>
     </section>
   );

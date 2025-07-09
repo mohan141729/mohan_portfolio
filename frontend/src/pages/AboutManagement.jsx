@@ -246,9 +246,9 @@ const AboutManagement = () => {
                 <button
                   type="button"
                   onClick={addJourneyPoint}
-                  className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-1 border border-cyan-500 text-cyan-600 bg-white hover:bg-cyan-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
                 >
-                  <FaPlus size={12} className="inline mr-1" />
+                  <FaPlus size={14} />
                   Add Point
                 </button>
               </div>
@@ -266,9 +266,10 @@ const AboutManagement = () => {
                     <button
                       type="button"
                       onClick={() => removeJourneyPoint(index)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors"
+                      className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
+                      title="Remove"
                     >
-                      <FaTrash size={12} />
+                      <FaTrash size={14} />
                     </button>
                   </div>
                 ))}
@@ -315,9 +316,9 @@ const AboutManagement = () => {
                 <button
                   type="button"
                   onClick={addEducationItem}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-1 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
                 >
-                  <FaPlus size={12} className="inline mr-1" />
+                  <FaPlus size={14} />
                   Add Item
                 </button>
               </div>
@@ -336,9 +337,10 @@ const AboutManagement = () => {
                       <button
                         type="button"
                         onClick={() => removeEducationItem(index)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors"
+                        className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
+                        title="Remove"
                       >
-                        <FaTrash size={12} />
+                        <FaTrash size={14} />
                       </button>
                     </div>
                     <textarea
@@ -393,9 +395,9 @@ const AboutManagement = () => {
                 <button
                   type="button"
                   onClick={addStrength}
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-1 border border-green-500 text-green-600 bg-white hover:bg-green-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
                 >
-                  <FaPlus size={12} className="inline mr-1" />
+                  <FaPlus size={14} />
                   Add Strength
                 </button>
               </div>
@@ -413,9 +415,10 @@ const AboutManagement = () => {
                     <button
                       type="button"
                       onClick={() => removeStrength(index)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors"
+                      className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
+                      title="Remove"
                     >
-                      <FaTrash size={12} />
+                      <FaTrash size={14} />
                     </button>
                   </div>
                 ))}

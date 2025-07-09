@@ -95,7 +95,7 @@ const SkillManagement = () => {
 
     try {
             const url = editingSkill
-        ? `${buildApiUrl(ENDPOINTS.SKILLS)}/${editingSkill.id}`
+        ? `${buildApiUrl(ENDPOINTS.SKILLS)}/${editingSkill._id || editingSkill.id}`
         : buildApiUrl(ENDPOINTS.SKILLS);
       
       const method = editingSkill ? 'PUT' : 'POST';
@@ -279,8 +279,8 @@ const SkillManagement = () => {
                       required
                     >
                       <option value="">Select Category</option>
-                      {categories.map((category) => (
-                        <option key={category} value={category}>
+                      {categories.map((category, index) => (
+                        <option key={category || index} value={category}>
                           {category}
                         </option>
                       ))}
@@ -348,7 +348,7 @@ const SkillManagement = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {skills.map((skill) => (
           <motion.div
-            key={skill.id}
+            key={skill._id || skill.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
@@ -388,7 +388,7 @@ const SkillManagement = () => {
                 <FaEdit /> Edit
               </button>
               <button
-                onClick={() => handleDelete(skill.id)}
+                onClick={() => handleDelete(skill._id || skill.id)}
                 className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
               >
                 <FaTrash /> Delete

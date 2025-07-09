@@ -130,7 +130,7 @@ const CertificationManagement = () => {
       });
 
             const url = editingCertification
-        ? `${buildApiUrl(ENDPOINTS.CERTIFICATIONS)}/${editingCertification.id}`
+        ? `${buildApiUrl(ENDPOINTS.CERTIFICATIONS)}/${editingCertification._id || editingCertification.id}`
         : buildApiUrl(ENDPOINTS.CERTIFICATIONS);
       
       const method = editingCertification ? 'PUT' : 'POST';
@@ -428,7 +428,7 @@ const CertificationManagement = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {certifications.map((certification) => (
           <motion.div
-            key={certification.id}
+            key={certification._id || certification.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
@@ -495,7 +495,7 @@ const CertificationManagement = () => {
                   <FaEdit /> Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(certification.id)}
+                  onClick={() => handleDelete(certification._id || certification.id)}
                   className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
                 >
                   <FaTrash /> Delete

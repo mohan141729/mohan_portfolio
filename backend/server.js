@@ -225,7 +225,7 @@ app.get('/api/projects', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Create new project (protected)
@@ -248,17 +248,17 @@ app.post('/api/projects', authenticateToken, upload.single('image'), (req, res) 
       })
       .catch(err => {
         res.status(500).json({ error: err.message });
-      });
+    });
   };
 
   if (featured && (featured === '1' || featured === 1 || featured === true)) {
     Project.updateMany({ _id: { $ne: req.params.id } }, { $set: { featured: false } })
       .then(() => {
-        doInsert();
+      doInsert();
       })
       .catch(err => {
         res.status(500).json({ error: err.message });
-      });
+    });
   } else {
     doInsert();
   }
@@ -300,7 +300,7 @@ app.delete('/api/projects/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Get all skills
@@ -311,7 +311,7 @@ app.get('/api/skills', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Create skill (protected)
@@ -332,7 +332,7 @@ app.post('/api/skills', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Update skill (protected)
@@ -349,7 +349,7 @@ app.put('/api/skills/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Delete skill (protected)
@@ -365,7 +365,7 @@ app.delete('/api/skills/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Get all certifications
@@ -376,7 +376,7 @@ app.get('/api/certifications', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Create certification (protected)
@@ -398,7 +398,7 @@ app.post('/api/certifications', authenticateToken, upload.single('image'), (req,
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Update certification (protected)
@@ -421,7 +421,7 @@ app.put('/api/certifications/:id', authenticateToken, upload.single('image'), (r
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Delete certification (protected)
@@ -437,7 +437,7 @@ app.delete('/api/certifications/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Submit contact form
@@ -458,7 +458,7 @@ app.post('/api/contact', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Get contact messages (protected)
@@ -469,7 +469,7 @@ app.get('/api/contact', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // API endpoint: Update message status (protected)
@@ -486,7 +486,7 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // --- Add root route to avoid 404 on backend root ---
@@ -507,44 +507,44 @@ app.post('/api/admin/login', (req, res) => {
 
   Admin.findOne({ email })
     .then(admin => {
-      if (!admin) {
-        console.log('Admin not found:', email);
+    if (!admin) {
+      console.log('Admin not found:', email);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Verify password
+    bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
+      if (err) {
+        console.error('Bcrypt error:', err);
+        return res.status(500).json({ error: 'Authentication error' });
+      }
+      
+      console.log('Password match:', isMatch);
+      
+      if (!isMatch) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
-
-      // Verify password
-      bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
-        if (err) {
-          console.error('Bcrypt error:', err);
-          return res.status(500).json({ error: 'Authentication error' });
-        }
-        
-        console.log('Password match:', isMatch);
-        
-        if (!isMatch) {
-          return res.status(401).json({ error: 'Invalid email or password' });
-        }
-        
-        // Create JWT
+      
+      // Create JWT
         const token = jwt.sign({ email: admin.email, id: admin._id }, jwtSecret, { expiresIn: '7d' });
-        console.log('Login successful, token created');
-        
+      console.log('Login successful, token created');
+      
         // Set cookie
-        const isProduction = process.env.NODE_ENV === 'production';
-        res.cookie('admin_token', token, {
-          httpOnly: true,
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('admin_token', token, {
+        httpOnly: true,
           secure: isProduction,
           sameSite: isProduction ? 'none' : 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
         
         res.json({ user: { email: admin.email, id: admin._id }, token });
-      });
+    });
     })
     .catch(err => {
       console.error('Database error:', err);
       res.status(500).json({ error: 'Authentication error' });
-    });
+  });
 });
 
 // Add token verification endpoint
@@ -576,40 +576,40 @@ app.put('/api/admin/change-password', authenticateToken, (req, res) => {
 
   Admin.findOne({ email: req.user.email })
     .then(admin => {
-      if (!admin) {
-        return res.status(404).json({ error: 'Admin not found' });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    // Verify current password
+    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
+      if (err) {
+        return res.status(500).json({ error: 'Authentication error' });
       }
 
-      // Verify current password
-      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+
+      // Hash new password
+      bcrypt.hash(newPassword, 10, (err, newHash) => {
         if (err) {
-          return res.status(500).json({ error: 'Authentication error' });
+          return res.status(500).json({ error: 'Password hashing error' });
         }
 
-        if (!isMatch) {
-          return res.status(401).json({ error: 'Current password is incorrect' });
-        }
-
-        // Hash new password
-        bcrypt.hash(newPassword, 10, (err, newHash) => {
-          if (err) {
-            return res.status(500).json({ error: 'Password hashing error' });
-          }
-
-          // Update password in database
+        // Update password in database
           Admin.findOneAndUpdate({ email: req.user.email }, { password_hash: newHash })
             .then(() => {
-              res.json({ message: 'Password updated successfully' });
+          res.json({ message: 'Password updated successfully' });
             })
             .catch(err => {
               res.status(500).json({ error: 'Failed to update password' });
-            });
         });
       });
+    });
     })
     .catch(err => {
       res.status(500).json({ error: 'Database error' });
-    });
+  });
 });
 
 // Admin change email endpoint
@@ -628,44 +628,44 @@ app.put('/api/admin/change-email', authenticateToken, (req, res) => {
 
   Admin.findOne({ email: req.user.email })
     .then(admin => {
-      if (!admin) {
-        return res.status(404).json({ error: 'Admin not found' });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    // Verify current password
+    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
+      if (err) {
+        return res.status(500).json({ error: 'Authentication error' });
       }
 
-      // Verify current password
-      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
-        if (err) {
-          return res.status(500).json({ error: 'Authentication error' });
-        }
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
 
-        if (!isMatch) {
-          return res.status(401).json({ error: 'Current password is incorrect' });
-        }
-
-        // Check if new email already exists
+      // Check if new email already exists
         Admin.findOne({ email: newEmail })
           .then(existingAdmin => {
-            if (existingAdmin) {
-              return res.status(400).json({ error: 'Email already exists' });
-            }
+        if (existingAdmin) {
+          return res.status(400).json({ error: 'Email already exists' });
+        }
 
-            // Update email in database
+        // Update email in database
             Admin.findOneAndUpdate({ email: req.user.email }, { email: newEmail })
               .then(() => {
-                res.json({ message: 'Email updated successfully' });
+          res.json({ message: 'Email updated successfully' });
               })
               .catch(err => {
                 res.status(500).json({ error: 'Failed to update email' });
-              });
+        });
           })
           .catch(err => {
             res.status(500).json({ error: 'Database error' });
-          });
       });
+    });
     })
     .catch(err => {
       res.status(500).json({ error: 'Database error' });
-    });
+  });
 });
 
 // Resume upload configuration
@@ -707,28 +707,28 @@ const resumeUpload = multer({
 app.get('/api/resume', authenticateToken, (req, res) => {
   Resume.findOne().sort({ createdAt: -1 })
     .then(resume => {
-      if (!resume) {
-        return res.status(404).json({ error: 'No resume found' });
-      }
-      res.json(resume);
+    if (!resume) {
+      return res.status(404).json({ error: 'No resume found' });
+    }
+    res.json(resume);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Public resume endpoint
 app.get('/api/public/resume', (req, res) => {
   Resume.findOne().sort({ createdAt: -1 })
     .then(resume => {
-      if (!resume) {
-        return res.status(404).json({ error: 'No resume found' });
-      }
-      res.json(resume);
+    if (!resume) {
+      return res.status(404).json({ error: 'No resume found' });
+    }
+    res.json(resume);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Upload resume endpoint
@@ -740,10 +740,10 @@ app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), (req, 
   // Delete existing resume
   Resume.deleteMany({})
     .then(() => {
-      // Insert new resume
+    // Insert new resume
       const newResume = new Resume({
-        filename: req.file.originalname,
-        file_path: `/uploads/${req.file.filename}`,
+          filename: req.file.originalname,
+          file_path: `/uploads/${req.file.filename}`,
         size: req.file.size
       });
 
@@ -755,37 +755,37 @@ app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), (req, 
         filename: resume.filename,
         file_path: resume.file_path,
         size: resume.size,
-        message: 'Resume uploaded successfully' 
-      });
+          message: 'Resume uploaded successfully' 
+        });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Delete resume endpoint
 app.delete('/api/resume', authenticateToken, (req, res) => {
   Resume.findOne().sort({ createdAt: -1 })
     .then(resume => {
-      if (!resume) {
-        return res.status(404).json({ error: 'No resume found' });
-      }
+    if (!resume) {
+      return res.status(404).json({ error: 'No resume found' });
+    }
 
-      // Delete file from filesystem
-      const filePath = path.join(__dirname, resume.file_path);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    // Delete file from filesystem
+    const filePath = path.join(__dirname, resume.file_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
-      // Delete from database
+    // Delete from database
       return Resume.findByIdAndDelete(resume._id);
     })
     .then(() => {
-      res.json({ message: 'Resume deleted successfully' });
+        res.json({ message: 'Resume deleted successfully' });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Hero Content API endpoints
@@ -794,28 +794,28 @@ app.delete('/api/resume', authenticateToken, (req, res) => {
 app.get('/api/public/hero', (req, res) => {
   HeroContent.findOne().sort({ createdAt: -1 })
     .then(hero => {
-      if (!hero) {
-        return res.status(404).json({ error: 'No hero content found' });
-      }
-      res.json(hero);
+    if (!hero) {
+      return res.status(404).json({ error: 'No hero content found' });
+    }
+    res.json(hero);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Get hero content (protected)
 app.get('/api/hero', authenticateToken, (req, res) => {
   HeroContent.findOne().sort({ createdAt: -1 })
     .then(hero => {
-      if (!hero) {
-        return res.status(404).json({ error: 'No hero content found' });
-      }
-      res.json(hero);
+    if (!hero) {
+      return res.status(404).json({ error: 'No hero content found' });
+    }
+    res.json(hero);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Update hero content (protected)
@@ -846,7 +846,7 @@ app.put('/api/hero', authenticateToken, upload.fields([
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // About Content API endpoints
@@ -855,28 +855,28 @@ app.put('/api/hero', authenticateToken, upload.fields([
 app.get('/api/public/about', (req, res) => {
   AboutContent.findOne().sort({ createdAt: -1 })
     .then(about => {
-      if (!about) {
-        return res.status(404).json({ error: 'No about content found' });
-      }
-      res.json(about);
+    if (!about) {
+      return res.status(404).json({ error: 'No about content found' });
+    }
+    res.json(about);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Get about content (protected)
 app.get('/api/about', authenticateToken, (req, res) => {
   AboutContent.findOne().sort({ createdAt: -1 })
     .then(about => {
-      if (!about) {
-        return res.status(404).json({ error: 'No about content found' });
-      }
-      res.json(about);
+    if (!about) {
+      return res.status(404).json({ error: 'No about content found' });
+    }
+    res.json(about);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Update about content (protected)
@@ -892,7 +892,7 @@ app.put('/api/about', authenticateToken, (req, res) => {
     strengths_list
   }, { new: true, upsert: true })
     .then(about => {
-      res.json({ message: 'About content updated successfully' });
+        res.json({ message: 'About content updated successfully' });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
@@ -905,28 +905,28 @@ app.put('/api/about', authenticateToken, (req, res) => {
 app.get('/api/public/contact', (req, res) => {
   ContactInfo.findOne().sort({ createdAt: -1 })
     .then(contact => {
-      if (!contact) {
-        return res.status(404).json({ error: 'No contact info found' });
-      }
-      res.json(contact);
+    if (!contact) {
+      return res.status(404).json({ error: 'No contact info found' });
+    }
+    res.json(contact);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Get contact info (protected)
 app.get('/api/contact-info', authenticateToken, (req, res) => {
   ContactInfo.findOne().sort({ createdAt: -1 })
     .then(contact => {
-      if (!contact) {
-        return res.status(404).json({ error: 'No contact info found' });
-      }
-      res.json(contact);
+    if (!contact) {
+      return res.status(404).json({ error: 'No contact info found' });
+    }
+    res.json(contact);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // Update contact info (protected)
@@ -937,7 +937,7 @@ app.put('/api/contact-info', authenticateToken, (req, res) => {
     title, subtitle, description, location, email, github_url, linkedin_url
   }, { new: true, upsert: true })
     .then(contact => {
-      res.json({ message: 'Contact info updated successfully' });
+        res.json({ message: 'Contact info updated successfully' });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
@@ -957,14 +957,14 @@ app.post('/api/fix-image-urls', (req, res) => {
   
   // Fix hero content
   // This section is no longer needed as hero content functionality is not in the new schema.
-
-  // Fix projects
+    
+    // Fix projects
   // This section is no longer needed as project functionality is not in the new schema.
-
-  // Fix certifications
+      
+      // Fix certifications
   // This section is no longer needed as certification functionality is not in the new schema.
-  
-  res.json({ 
+        
+        res.json({ 
     message: 'Image URLs fix attempted (no image URLs to fix in new schema)',
     heroFixed: 0,
     totalFixed: 0
@@ -995,11 +995,11 @@ app.get('/api/stats', authenticateToken, (req, res) => {
       stats.skills = skills || 0;
       stats.certifications = certifications || 0;
       stats.messages = messages || 0;
-      res.json(stats);
+          res.json(stats);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-    });
+  });
 });
 
 // --- Utility endpoint to debug cookies (for troubleshooting) ---

@@ -133,7 +133,7 @@ const ProjectManagement = () => {
       });
 
             const url = editingProject
-        ? `${buildApiUrl(ENDPOINTS.PROJECTS)}/${editingProject.id}`
+        ? `${buildApiUrl(ENDPOINTS.PROJECTS)}/${editingProject._id || editingProject.id}`
         : buildApiUrl(ENDPOINTS.PROJECTS);
       
       const method = editingProject ? 'PUT' : 'POST';
@@ -417,7 +417,7 @@ const ProjectManagement = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {projects.map((project) => (
           <motion.div
-            key={project.id}
+            key={project._id || project.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
@@ -447,11 +447,11 @@ const ProjectManagement = () => {
               {project.tech && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {Array.isArray(project.tech) ? project.tech.map((tech, index) => (
-                    <span key={index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
+                    <span key={tech || index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
                       {tech.trim()}
                     </span>
                   )) : project.tech.split(',').filter(Boolean).map((tech, index) => (
-                    <span key={index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
+                    <span key={tech || index} className="bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded-full">
                       {tech.trim()}
                     </span>
                   ))}
@@ -466,7 +466,7 @@ const ProjectManagement = () => {
                   <FaEdit /> Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(project.id)}
+                  onClick={() => handleDelete(project._id || project.id)}
                   className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
                 >
                   <FaTrash /> Delete

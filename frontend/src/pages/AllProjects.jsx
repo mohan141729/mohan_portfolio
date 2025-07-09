@@ -243,7 +243,7 @@ const AllProjects = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredProjects.map((project) => (
               <div
-                key={project.id}
+                key={project._id || project.id}
                 className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
               >
                 <div className="relative">
