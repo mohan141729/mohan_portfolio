@@ -93,13 +93,13 @@ const Admin = () => {
           <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Welcome back! Here's what's happening with your portfolio.</p>
         </div>
         <div className="flex gap-2">
-          <Link
-            to="/"
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center"
-          >
-            <FaUsers size={16} />
-            Back to Portfolio
-          </Link>
+        <Link
+          to="/"
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base w-full sm:w-auto justify-center"
+        >
+          <FaUsers size={16} />
+          Back to Portfolio
+        </Link>
         </div>
       </div>
 

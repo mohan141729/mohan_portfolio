@@ -3,6 +3,8 @@ import axios from 'axios';
 import { FaRobot, FaTimes } from 'react-icons/fa';
 import { BsChatDotsFill } from 'react-icons/bs';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
+import { useMediaQuery } from 'react-responsive';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AIAssistant() {
   const [open, setOpen] = useState(false);
@@ -19,6 +21,13 @@ export default function AIAssistant() {
   const [suggestions, setSuggestions] = useState([]);
   const [projectRatings, setProjectRatings] = useState({}); // { [projectId]: { average, count } }
   const chatEndRef = useRef(null);
+  const [iconPosition, setIconPosition] = useState({ x: 24, y: window.innerHeight - 100 });
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [longPressTimeout, setLongPressTimeout] = useState(null);
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const iconRef = useRef(null);
+  const { isAuthenticated } = useAuth();
 
   // Fetch all portfolio data when assistant opens
   useEffect(() => {
@@ -88,6 +97,47 @@ export default function AIAssistant() {
     }
     setSuggestions(sugg.slice(0, 5));
   }, [input, portfolioData]);
+
+  // Update position on window resize (keep icon in view)
+  useEffect(() => {
+    const handleResize = () => {
+      setIconPosition(pos => ({
+        x: Math.min(pos.x, window.innerWidth - 72),
+        y: Math.min(pos.y, window.innerHeight - 72)
+      }));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Drag handlers for mobile
+  const handleTouchStart = (e) => {
+    if (!isMobile || !isAuthenticated) return;
+    const touch = e.touches[0];
+    setLongPressTimeout(setTimeout(() => {
+      setDragging(true);
+      setDragOffset({
+        x: touch.clientX - iconPosition.x,
+        y: touch.clientY - iconPosition.y
+      });
+    }, 400)); // 400ms long press
+  };
+  const handleTouchMove = (e) => {
+    if (!isMobile || !dragging || !isAuthenticated) return;
+    const touch = e.touches[0];
+    setIconPosition({
+      x: Math.max(0, Math.min(touch.clientX - dragOffset.x, window.innerWidth - 72)),
+      y: Math.max(0, Math.min(touch.clientY - dragOffset.y, window.innerHeight - 72))
+    });
+  };
+  const handleTouchEnd = () => {
+    if (!isMobile || !isAuthenticated) return;
+    clearTimeout(longPressTimeout);
+    setLongPressTimeout(null);
+    setDragging(false);
+  };
+
+  // Mouse drag for desktop (optional, but only enable on mobile for now)
 
   const formatPortfolioData = () => {
     const { projects, skills, resume, hero, about, contact, certifications } = portfolioData;
@@ -186,16 +236,29 @@ export default function AIAssistant() {
     <>
       {/* Floating Button with custom icon */}
       {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-tr from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all group"
-          aria-label="Open Mohan's AI Assistant"
-        >
-          <span className="relative flex items-center justify-center w-9 h-9">
-            <BsChatDotsFill size={32} className="absolute text-white left-0 top-0 w-9 h-9" />
-            <FaRobot size={18} className="absolute text-blue-400 left-1.5 top-1.5 w-6 h-6 group-hover:scale-110 transition-transform" />
-          </span>
-        </button>
+        <div style={isMobile ? { left: iconPosition.x, top: iconPosition.y, right: 'auto', bottom: 'auto', position: 'fixed', zIndex: 50, touchAction: 'none' } : { right: 24, bottom: 24, position: 'fixed', zIndex: 50 }}>
+          <button
+            ref={iconRef}
+            onClick={() => setOpen(true)}
+            className={`bg-gradient-to-tr from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all group ${dragging ? 'ring-4 ring-purple-400' : ''}`}
+            aria-label="Open Mohan's AI Assistant"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
+            <span className="relative flex items-center justify-center w-9 h-9">
+              <BsChatDotsFill size={32} className="absolute text-white left-0 top-0 w-9 h-9" />
+              <FaRobot size={18} className="absolute text-blue-400 left-1.5 top-1.5 w-6 h-6 group-hover:scale-110 transition-transform" />
+            </span>
+          </button>
+          {/* Tooltip for admin on mobile */}
+          {isMobile && isAuthenticated && (
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-black text-white text-xs rounded px-2 py-1 opacity-80 pointer-events-none whitespace-nowrap shadow-lg">
+              Long-press to move
+            </div>
+          )}
+        </div>
       )}
       {/* Popup Card */}
       {open && (
