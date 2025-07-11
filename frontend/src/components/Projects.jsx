@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaExternalLinkAlt, FaGithub, FaEye } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaGithub, FaEye, FaStar } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
@@ -9,10 +9,68 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Backend ratings: { [projectId]: { average, count } }
+  const [backendRatings, setBackendRatings] = useState({});
+  // User's rating for this session (not persisted)
+  const [userRatings, setUserRatings] = useState({});
+  const [showFeedback, setShowFeedback] = useState({}); // { [projectId]: true/false }
+  const [pendingRating, setPendingRating] = useState({}); // { [projectId]: 0-5 }
 
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Fetch all project ratings from backend
+  useEffect(() => {
+    if (projects.length > 0) {
+      projects.forEach((project) => {
+        fetchBackendRating(project._id || project.id);
+      });
+    }
+    // eslint-disable-next-line
+  }, [projects]);
+
+  const fetchBackendRating = async (projectId) => {
+    try {
+      const res = await fetch(buildApiUrl(`/api/projects/${projectId}/ratings`));
+      if (res.ok) {
+        const data = await res.json();
+        setBackendRatings(prev => ({ ...prev, [projectId]: data }));
+      }
+    } catch {}
+  };
+
+  const handleRate = (projectId, rating) => {
+    setUserRatings(prev => ({ ...prev, [projectId]: rating }));
+  };
+
+  const openFeedback = (projectId) => {
+    setShowFeedback(prev => ({ ...prev, [projectId]: true }));
+    setPendingRating(prev => ({ ...prev, [projectId]: userRatings[projectId] || 0 }));
+  };
+  const closeFeedback = (projectId) => {
+    setShowFeedback(prev => ({ ...prev, [projectId]: false }));
+  };
+  const submitFeedback = async (projectId) => {
+    if (pendingRating[projectId]) {
+      // POST to backend
+      await fetch(buildApiUrl(`/api/projects/${projectId}/ratings`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: pendingRating[projectId] })
+      });
+      setUserRatings(prev => ({ ...prev, [projectId]: pendingRating[projectId] }));
+      setShowFeedback(prev => ({ ...prev, [projectId]: false }));
+      fetchBackendRating(projectId);
+    }
+  };
+
+  // Helper: get backend average rating (to one decimal)
+  const getAverageRating = (projectId) => {
+    const avg = backendRatings[projectId]?.average || 0;
+    return Math.round(avg * 10) / 10;
+  };
+  const getRatingCount = (projectId) => backendRatings[projectId]?.count || 0;
 
   const fetchProjects = async () => {
     try {
@@ -150,6 +208,13 @@ const Projects = () => {
   const totalCards = 3;
   const placeholdersNeeded = totalCards - (1 + otherProjects.length);
 
+  // Sort otherProjects by backend average rating (highest first, one decimal)
+  const sortedOtherProjects = [...otherProjects].sort((a, b) => {
+    const aAvg = getAverageRating(a._id || a.id);
+    const bAvg = getAverageRating(b._id || b.id);
+    return bAvg - aAvg;
+  });
+
   return (
     <SectionWrapper id="projects" gradient="bg-gradient-to-b from-indigo-100 via-indigo-200 to-purple-100">
       <h2 className="text-4xl sm:text-5xl font-extrabold text-center text-blue-900 mb-4 tracking-tight px-4 drop-shadow-lg">Featured Projects</h2>
@@ -202,6 +267,55 @@ const Projects = () => {
                     </div>
                   </div>
                   <p className="text-gray-700 leading-relaxed text-base sm:text-lg mb-2">{featuredProject.description}</p>
+                  {/* Star Rating */}
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(star => (
+                      <FaStar
+                        key={star}
+                        className={`cursor-pointer transition-colors duration-200 ${getAverageRating(featuredProject._id || featuredProject.id) >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                        size={22}
+                        onClick={() => handleRate(featuredProject._id || featuredProject.id, star)}
+                        title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      />
+                    ))}
+                    <span className="ml-2 text-sm text-yellow-600 font-semibold">
+                      {getAverageRating(featuredProject._id || featuredProject.id)} / 5
+                      {getRatingCount(featuredProject._id || featuredProject.id) > 0 && (
+                        <span className="ml-1 text-gray-500 font-normal">({getRatingCount(featuredProject._id || featuredProject.id)} rating{getRatingCount(featuredProject._id || featuredProject.id) > 1 ? 's' : ''})</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    className="mt-1 mb-2 px-4 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow hover:from-blue-600 hover:to-indigo-600 transition text-sm font-semibold"
+                    style={{ width: '200px' }}
+                    onClick={() => openFeedback(featuredProject._id || featuredProject.id)}
+                  >
+                    Give Feedback
+                  </button>
+                  {showFeedback[featuredProject._id || featuredProject.id] && (
+                    <div className="flex flex-col items-start gap-2 bg-white border border-blue-100 rounded-lg p-4 mt-2 shadow-lg">
+                      <div className="flex items-center gap-1 mb-1">
+                        {[1,2,3,4,5].map(star => (
+                          <FaStar
+                            key={star}
+                            className={`cursor-pointer transition-colors duration-200 ${pendingRating[featuredProject._id || featuredProject.id] >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                            size={22}
+                            onClick={() => setPendingRating(prev => ({ ...prev, [featuredProject._id || featuredProject.id]: star }))}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded shadow hover:from-blue-600 hover:to-purple-600 text-xs font-semibold transition"
+                          onClick={() => submitFeedback(featuredProject._id || featuredProject.id)}
+                        >Submit</button>
+                        <button
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs font-semibold"
+                          onClick={() => closeFeedback(featuredProject._id || featuredProject.id)}
+                        >Cancel</button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {featuredProject.tech && Array.isArray(featuredProject.tech) ? featuredProject.tech.map((tech, index) => (
                       <span 
@@ -228,7 +342,7 @@ const Projects = () => {
         </div>
         {/* Other Projects (2 cards) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          {otherProjects.map((project, idx) => (
+          {sortedOtherProjects.map((project, idx) => (
             <div key={project._id || project.id || idx} className="relative bg-gradient-to-br from-white via-blue-50 to-indigo-100 rounded-2xl shadow-xl shadow-blue-100 border border-blue-100 overflow-hidden hover:shadow-[0_8px_40px_0_rgba(59,130,246,0.10)] hover:-translate-y-1 transition-all duration-300">
               <div className="flex flex-col">
                 <div className="relative">
@@ -240,6 +354,55 @@ const Projects = () => {
                 <div className="p-6 flex flex-col gap-3">
                   <h3 className="text-xl font-bold text-gray-900 mb-1 tracking-tight leading-tight">{project.title}</h3>
                   <p className="text-gray-600 text-sm mb-2 line-clamp-3">{project.description}</p>
+                  {/* Star Rating */}
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(star => (
+                      <FaStar
+                        key={star}
+                        className={`cursor-pointer transition-colors duration-200 ${getAverageRating(project._id || project.id) >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                        size={20}
+                        onClick={() => handleRate(project._id || project.id, star)}
+                        title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      />
+                    ))}
+                    <span className="ml-2 text-xs text-yellow-600 font-semibold">
+                      {getAverageRating(project._id || project.id)} / 5
+                      {getRatingCount(project._id || project.id) > 0 && (
+                        <span className="ml-1 text-gray-500 font-normal">({getRatingCount(project._id || project.id)} rating{getRatingCount(project._id || project.id) > 1 ? 's' : ''})</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    className="mt-1 mb-2 px-4 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow hover:from-blue-600 hover:to-indigo-600 transition text-sm font-semibold"
+                    style={{ width: '200px' }}
+                    onClick={() => openFeedback(project._id || project.id)}
+                  >
+                    Give Feedback
+                  </button>
+                  {showFeedback[project._id || project.id] && (
+                    <div className="flex flex-col items-start gap-2 bg-white border border-blue-100 rounded-lg p-4 mt-2 shadow-lg">
+                      <div className="flex items-center gap-1 mb-1">
+                        {[1,2,3,4,5].map(star => (
+                          <FaStar
+                            key={star}
+                            className={`cursor-pointer transition-colors duration-200 ${pendingRating[project._id || project.id] >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                            size={20}
+                            onClick={() => setPendingRating(prev => ({ ...prev, [project._id || project.id]: star }))}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded shadow hover:from-blue-600 hover:to-purple-600 text-xs font-semibold transition"
+                          onClick={() => submitFeedback(project._id || project.id)}
+                        >Submit</button>
+                        <button
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs font-semibold"
+                          onClick={() => closeFeedback(project._id || project.id)}
+                        >Cancel</button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-3 mt-2">
                     {project.live && project.live !== '#' && (
                       <a 

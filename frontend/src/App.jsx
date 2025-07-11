@@ -21,6 +21,7 @@ import AdminSettings from './pages/AdminSettings';
 import ResumeManagement from './pages/ResumeManagement';
 import AllProjects from './pages/AllProjects';
 import LoginModal from './components/LoginModal';
+import AIAssistant from './components/AIAssistant';
 
 function Portfolio() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -29,6 +30,7 @@ function Portfolio() {
     <div className="bg-gray-100 min-h-screen flex flex-col">
       <Navbar onAdminLogin={() => setShowLoginModal(true)} />
       <main className="pt-20 flex-1">
+        <AIAssistant />
         <Hero />
         <About />
         <Projects />

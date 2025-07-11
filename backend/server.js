@@ -178,6 +178,14 @@ const resumeSchema = new mongoose.Schema({
 
 const Resume = mongoose.model('Resume', resumeSchema);
 
+// --- Project Rating Model ---
+const ratingSchema = new mongoose.Schema({
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  createdAt: { type: Date, default: Date.now }
+});
+const ProjectRating = mongoose.model('ProjectRating', ratingSchema);
+
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.admin_token || req.headers.authorization?.split(' ')[1];
@@ -318,6 +326,36 @@ app.delete('/api/projects/:id', authenticateToken, (req, res) => {
     .catch(err => {
       res.status(500).json({ error: err.message });
   });
+});
+
+// --- Project Ratings API ---
+// POST /api/projects/:projectId/ratings
+app.post('/api/projects/:projectId/ratings', async (req, res) => {
+  try {
+    const { rating } = req.body;
+    const { projectId } = req.params;
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be 1-5' });
+    }
+    const newRating = new ProjectRating({ projectId, rating });
+    await newRating.save();
+    res.status(201).json({ message: 'Rating submitted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit rating' });
+  }
+});
+
+// GET /api/projects/:projectId/ratings
+app.get('/api/projects/:projectId/ratings', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const ratings = await ProjectRating.find({ projectId });
+    const count = ratings.length;
+    const avg = count > 0 ? (ratings.reduce((sum, r) => sum + r.rating, 0) / count) : 0;
+    res.json({ average: avg, count });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch ratings' });
+  }
 });
 
 // API endpoint: Get all skills

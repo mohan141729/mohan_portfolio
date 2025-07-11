@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaExternalLinkAlt, FaGithub, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaGithub, FaSearch, FaFilter, FaArrowLeft, FaStar } from 'react-icons/fa';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
 import { Link } from 'react-router-dom';
@@ -12,6 +12,13 @@ const AllProjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  // Backend ratings: { [projectId]: { average, count } }
+  const [backendRatings, setBackendRatings] = useState({});
+  // User's rating for this session (not persisted)
+  const [userRatings, setUserRatings] = useState({});
+  const [showFeedback, setShowFeedback] = useState({}); // { [projectId]: true/false }
+  const [pendingRating, setPendingRating] = useState({}); // { [projectId]: 0-5 }
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -20,6 +27,15 @@ const AllProjects = () => {
     console.log('Fetched projects:', projects);
     filterProjects();
   }, [projects, searchTerm, selectedCategory]);
+
+  useEffect(() => {
+    if (filteredProjects.length > 0) {
+      filteredProjects.forEach((project) => {
+        fetchBackendRating(project._id || project.id);
+      });
+    }
+    // eslint-disable-next-line
+  }, [filteredProjects]);
 
   const fetchProjects = async () => {
     try {
@@ -60,6 +76,47 @@ const AllProjects = () => {
 
     setFilteredProjects(filtered);
   };
+
+  const fetchBackendRating = async (projectId) => {
+    try {
+      const res = await fetch(buildApiUrl(`/api/projects/${projectId}/ratings`));
+      if (res.ok) {
+        const data = await res.json();
+        setBackendRatings(prev => ({ ...prev, [projectId]: data }));
+      }
+    } catch {}
+  };
+
+  const handleRate = (projectId, rating) => {
+    setUserRatings(prev => ({ ...prev, [projectId]: rating }));
+  };
+
+  const openFeedback = (projectId) => {
+    setShowFeedback(prev => ({ ...prev, [projectId]: true }));
+    setPendingRating(prev => ({ ...prev, [projectId]: userRatings[projectId] || 0 }));
+  };
+  const closeFeedback = (projectId) => {
+    setShowFeedback(prev => ({ ...prev, [projectId]: false }));
+  };
+  const submitFeedback = async (projectId) => {
+    if (pendingRating[projectId]) {
+      await fetch(buildApiUrl(`/api/projects/${projectId}/ratings`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: pendingRating[projectId] })
+      });
+      setUserRatings(prev => ({ ...prev, [projectId]: pendingRating[projectId] }));
+      setShowFeedback(prev => ({ ...prev, [projectId]: false }));
+      fetchBackendRating(projectId);
+    }
+  };
+
+  // Helper: get backend average rating (to one decimal)
+  const getAverageRating = (projectId) => {
+    const avg = backendRatings[projectId]?.average || 0;
+    return Math.round(avg * 10) / 10;
+  };
+  const getRatingCount = (projectId) => backendRatings[projectId]?.count || 0;
 
   // 1. Get unique categories from the 'category' field
   const getUniqueCategories = () => {
@@ -285,6 +342,55 @@ const AllProjects = () => {
                     </div>
                   </div>
                   <p className="text-gray-700 leading-relaxed flex-1 text-base group-hover:text-gray-900 transition-colors duration-200">{project.description}</p>
+                  {/* Star Rating UI */}
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(star => (
+                      <FaStar
+                        key={star}
+                        className={`cursor-pointer transition-colors duration-200 ${getAverageRating(project._id || project.id) >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                        size={20}
+                        onClick={() => handleRate(project._id || project.id, star)}
+                        title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      />
+                    ))}
+                    <span className="ml-2 text-xs text-yellow-600 font-semibold">
+                      {getAverageRating(project._id || project.id)} / 5
+                      {getRatingCount(project._id || project.id) > 0 && (
+                        <span className="ml-1 text-gray-500 font-normal">({getRatingCount(project._id || project.id)} rating{getRatingCount(project._id || project.id) > 1 ? 's' : ''})</span>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    className="mt-1 mb-2 px-4 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow hover:from-blue-600 hover:to-indigo-600 transition text-sm font-semibold"
+                    style={{ width: '200px' }}
+                    onClick={() => openFeedback(project._id || project.id)}
+                  >
+                    Give Feedback
+                  </button>
+                  {showFeedback[project._id || project.id] && (
+                    <div className="flex flex-col items-start gap-2 bg-white border border-blue-100 rounded-lg p-4 mt-2 shadow-lg">
+                      <div className="flex items-center gap-1 mb-1">
+                        {[1,2,3,4,5].map(star => (
+                          <FaStar
+                            key={star}
+                            className={`cursor-pointer transition-colors duration-200 ${pendingRating[project._id || project.id] >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                            size={20}
+                            onClick={() => setPendingRating(prev => ({ ...prev, [project._id || project.id]: star }))}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded shadow hover:from-blue-600 hover:to-purple-600 text-xs font-semibold transition"
+                          onClick={() => submitFeedback(project._id || project.id)}
+                        >Submit</button>
+                        <button
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs font-semibold"
+                          onClick={() => closeFeedback(project._id || project.id)}
+                        >Cancel</button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2 mt-2">
                     {project.tech && Array.isArray(project.tech) ? project.tech.map((tech, index) => (
                       <span 
