@@ -2,6 +2,21 @@
 
 A full-stack portfolio website with a React frontend and Node.js (Express) backend, using MongoDB for data storage.
 
+## Recent Improvements
+
+- Advanced UI colors and gradients for Certifications and Skills sections for a modern, consistent look
+- Center-aligned section descriptions for improved readability
+- Enhanced certification card overlays and tag styles
+- Improved responsive design and accessibility
+
+## Planned Features
+
+- AI-powered portfolio guide: An agent that helps visitors explore the portfolio based on their interests
+- Interactive knowledge graph: Visualize connections between skills, certifications, and projects
+- Real-time project analytics dashboard
+- Blockchain-verified certificates for authenticity
+- Personalized learning path generator for visitors
+
 ## Project Structure
 
 ```

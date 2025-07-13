@@ -54,12 +54,9 @@ const Certifications = () => {
 
   const handleDownloadResume = () => {
     if (resume) {
-      const link = document.createElement('a');
-      link.href = `${buildApiUrl('')}${resume.file_path}`;
-      link.download = resume.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const isFullUrl = /^https?:\/\//i.test(resume.file_path);
+      const url = isFullUrl ? resume.file_path : `${buildApiUrl('')}${resume.file_path}`;
+      window.open(url, '_blank');
     }
   };
 

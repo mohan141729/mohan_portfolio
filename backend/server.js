@@ -21,6 +21,9 @@ const streamifier = require('streamifier');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Serve uploaded files PUBLICLY before any authentication middleware
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // --- CORS CONFIGURATION ---
 // Allow requests from Vercel frontend and local dev, allow credentials (cookies)
 const isProduction = process.env.NODE_ENV === 'production';
@@ -221,6 +224,31 @@ async function uploadBufferToCloudinary(buffer, options) {
     streamifier.createReadStream(buffer).pipe(stream);
   });
 }
+
+// (Move these endpoints here, after authenticateToken is defined)
+// Stats endpoint for dashboard
+app.get('/api/stats', authenticateToken, async (req, res) => {
+  try {
+    const stats = {};
+    stats.projects = await Project.countDocuments();
+    stats.skills = await Skill.countDocuments();
+    stats.certifications = await Certification.countDocuments();
+    stats.messages = await ContactMessage.countDocuments();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// AI Tools endpoints
+app.get('/api/ai-tools', async (req, res) => {
+  try {
+    const tools = await AITool.find().sort({ order: 1 });
+    res.json(tools);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch AI tools' });
+  }
+});
 
 // API endpoint: Get all projects
 app.get('/api/projects', (req, res) => {
@@ -796,7 +824,18 @@ app.put('/api/admin/change-email', authenticateToken, (req, res) => {
 });
 
 // Resume upload configuration
-const resumeUpload = multer({ storage: multer.memoryStorage() });
+const resumeStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads'));
+  },
+  filename: function (req, file, cb) {
+    // Use a unique filename (timestamp + original name)
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'resume-' + uniqueSuffix + ext);
+  }
+});
+const resumeUpload = multer({ storage: resumeStorage });
 
 // Create resume table if not exists
 // This section is no longer needed as resume functionality is not in the new schema.
@@ -830,43 +869,32 @@ app.get('/api/public/resume', (req, res) => {
 });
 
 // Upload resume endpoint
-app.post('/api/resume', authenticateToken, upload.single('resume'), async (req, res) => {
+app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
   try {
-    const result = await uploadBufferToCloudinary(req.file.buffer, {
-      resource_type: 'auto',
-      folder: 'resumes'
+    // Delete existing resume(s)
+    await Resume.deleteMany({});
+
+    // Insert new resume with local file path
+    const newResume = new Resume({
+      filename: req.file.originalname,
+      file_path: '/uploads/' + req.file.filename, // Public URL path
+      size: req.file.size
     });
+    await newResume.save();
 
-    // Delete existing resume
-    Resume.deleteMany({})
-      .then(() => {
-      // Insert new resume
-        const newResume = new Resume({
-            filename: req.file.originalname,
-            file_path: result.secure_url,
-          size: req.file.size
-        });
-
-        return newResume.save();
-      })
-      .then(resume => {
-        res.status(201).json({ 
-          id: resume._id, 
-          filename: resume.filename,
-          file_path: resume.file_path,
-          size: resume.size,
-            message: 'Resume uploaded successfully' 
-          });
-      })
-      .catch(err => {
-        res.status(500).json({ error: err.message });
+    res.status(201).json({
+      id: newResume._id,
+      filename: newResume.filename,
+      file_path: newResume.file_path,
+      size: newResume.size,
+      message: 'Resume uploaded successfully'
     });
   } catch (err) {
-    console.error('Error uploading resume to Cloudinary:', err);
+    console.error('Error saving resume:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -1103,148 +1131,6 @@ app.post('/api/fix-image-urls', (req, res) => {
 app.post('/api/admin/logout', (req, res) => {
   res.clearCookie('admin_token');
   res.json({ message: 'Logged out successfully' });
-});
-
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Stats endpoint for dashboard
-app.get('/api/stats', authenticateToken, (req, res) => {
-  const stats = {};
-  
-  Promise.all([
-    Project.countDocuments(),
-    Skill.countDocuments(),
-    Certification.countDocuments(),
-    ContactMessage.countDocuments()
-  ])
-    .then(([projects, skills, certifications, messages]) => {
-      stats.projects = projects || 0;
-      stats.skills = skills || 0;
-      stats.certifications = certifications || 0;
-      stats.messages = messages || 0;
-          res.json(stats);
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-  });
-});
-
-// --- Utility endpoint to debug cookies (for troubleshooting) ---
-app.get('/api/debug-cookies', (req, res) => {
-  res.json({ cookies: req.cookies });
-});
-
-// --- AI Tools API ---
-// Public: Get all AI tools (sorted by order)
-app.get('/api/ai-tools', async (req, res) => {
-  try {
-    const tools = await AITool.find().sort({ order: 1 });
-    res.json(tools);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch AI tools' });
-  }
-});
-
-// Admin: Add new AI tool (with optional icon image upload to Cloudinary)
-app.post('/api/ai-tools', authenticateToken, upload.single('iconImage'), async (req, res) => {
-  try {
-    const { name, order } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-    let iconImage = undefined;
-    let parsedOrder = order !== undefined ? Number(order) : 0;
-    if (req.file) {
-      // Upload to Cloudinary
-      const streamUpload = (buffer) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ folder: 'ai-tools' }, (error, result) => {
-            if (result) resolve(result.secure_url);
-            else reject(error);
-          });
-          streamifier.createReadStream(buffer).pipe(stream);
-        });
-      };
-      try {
-        iconImage = await streamUpload(req.file.buffer);
-      } catch (err) {
-        console.error('Cloudinary upload error:', err);
-        return res.status(400).json({ error: 'Failed to upload image to Cloudinary', details: err.message });
-      }
-    }
-    const tool = new AITool({ name, order: parsedOrder, iconImage });
-    await tool.save();
-    res.status(201).json(tool);
-  } catch (err) {
-    console.error('AI Tool POST error:', err);
-    res.status(400).json({ error: 'Failed to add AI tool', details: err.message });
-  }
-});
-
-// Admin: Update AI tool (with optional icon image upload to Cloudinary)
-app.put('/api/ai-tools/:id', authenticateToken, upload.single('iconImage'), async (req, res) => {
-  try {
-    const { name, order } = req.body;
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-    let update = { name };
-    if (order !== undefined) update.order = Number(order);
-    if (req.file) {
-      // Upload to Cloudinary
-      const streamUpload = (buffer) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ folder: 'ai-tools' }, (error, result) => {
-            if (result) resolve(result.secure_url);
-            else reject(error);
-          });
-          streamifier.createReadStream(buffer).pipe(stream);
-        });
-      };
-      try {
-        update.iconImage = await streamUpload(req.file.buffer);
-      } catch (err) {
-        console.error('Cloudinary upload error:', err);
-        return res.status(400).json({ error: 'Failed to upload image to Cloudinary', details: err.message });
-      }
-    }
-    const tool = await AITool.findByIdAndUpdate(
-      req.params.id,
-      update,
-      { new: true }
-    );
-    if (!tool) return res.status(404).json({ error: 'AI tool not found' });
-    res.json(tool);
-  } catch (err) {
-    console.error('AI Tool PUT error:', err);
-    res.status(400).json({ error: 'Failed to update AI tool', details: err.message });
-  }
-});
-
-// Admin: Delete AI tool
-app.delete('/api/ai-tools/:id', authenticateToken, async (req, res) => {
-  try {
-    const tool = await AITool.findByIdAndDelete(req.params.id);
-    if (!tool) return res.status(404).json({ error: 'AI tool not found' });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(400).json({ error: 'Failed to delete AI tool' });
-  }
-});
-
-// Admin: Reorder AI tools (bulk update)
-app.put('/api/ai-tools', authenticateToken, async (req, res) => {
-  try {
-    const { order } = req.body; // [{_id, order}, ...]
-    if (!Array.isArray(order)) return res.status(400).json({ error: 'Order must be an array' });
-    for (const item of order) {
-      await AITool.findByIdAndUpdate(item._id, { order: item.order });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    res.status(400).json({ error: 'Failed to reorder AI tools' });
-  }
 });
 
 // Serve uploaded AI tool images statically
