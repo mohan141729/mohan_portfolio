@@ -177,7 +177,7 @@ const Certifications = () => {
   return (
     <SectionWrapper id="certifications" gradient="bg-gradient-to-b from-green-50 via-white to-blue-50">
       <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Certifications & Resume</h2>
-      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">Professional certifications and achievements that validate my expertise.</p>
+      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4 mx-auto">Professional certifications and achievements that validate my expertise.</p>
       <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
         {/* Resume Download Section */}
         <motion.div
@@ -209,7 +209,7 @@ const Certifications = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: (index % certifications.length) * 0.1 }}
-                className="relative group rounded-2xl shadow-xl border border-gray-200 overflow-hidden bg-white/80 hover:shadow-2xl transition-all duration-300 w-72 h-80 flex-shrink-0 flex flex-col justify-center items-center cursor-pointer"
+                className="relative group rounded-2xl shadow-xl border border-blue-100 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-100 hover:shadow-2xl transition-all duration-300 w-72 h-80 flex-shrink-0 flex flex-col justify-center items-center cursor-pointer"
                 onClick={() => {
                   if (certification.image) {
                     setModalImage(getImageUrl(certification.image));
@@ -225,13 +225,13 @@ const Certifications = () => {
                     className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl bg-gradient-to-br from-blue-50 to-indigo-100">No Image</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl bg-gradient-to-br from-blue-100 to-indigo-100">No Image</div>
                 )}
                 {/* Overlay with details on hover */}
-                <div className="absolute inset-0 bg-black/70 bg-opacity-80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 text-white">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 text-center">{certification.name}</h3>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-indigo-900/80 to-black/80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 text-white">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 text-center drop-shadow-lg">{certification.name}</h3>
                   {certification.expiry_date && isExpired(certification.expiry_date) && (
-                    <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full mb-2">Expired</span>
+                    <span className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full mb-2 shadow">Expired</span>
                   )}
                   <div className="space-y-1 text-sm mb-2 text-center">
                     <div className="flex items-center gap-2 justify-center">
@@ -245,7 +245,7 @@ const Certifications = () => {
                     {certification.expiry_date && (
                       <div className="flex items-center gap-2 justify-center">
                         <FaCalendarAlt size={14} />
-                        <span className={`${isExpired(certification.expiry_date) ? 'text-red-400' : ''}`}>Expires: {formatDate(certification.expiry_date)}</span>
+                        <span className={`${isExpired(certification.expiry_date) ? 'text-red-200' : 'text-white'}`}>Expires: {formatDate(certification.expiry_date)}</span>
                       </div>
                     )}
                   </div>
@@ -260,7 +260,7 @@ const Certifications = () => {
             {Array.from({ length: getBubbleCount() }).map((_, idx) => (
               <span
                 key={idx}
-                className={`w-3 h-3 rounded-full ${activeBubble === idx ? 'bg-blue-500' : 'bg-gray-300'} transition-colors duration-200`}
+                className={`w-3 h-3 rounded-full ${activeBubble === idx ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-300'} transition-colors duration-200`}
               />
             ))}
           </div>

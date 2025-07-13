@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { buildApiUrl, getFormDataConfig, ENDPOINTS } from '../config/api';
 
 // Helper to safely parse JSON
@@ -22,6 +22,12 @@ const HeroManagement = () => {
   const [message, setMessage] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [backgroundImage, setBackgroundImage] = useState(null);
+  const [isProfileDragOver, setIsProfileDragOver] = useState(false);
+  const [isBackgroundDragOver, setIsBackgroundDragOver] = useState(false);
+  const profileInputRef = useRef();
+  const backgroundInputRef = useRef();
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [backgroundPreview, setBackgroundPreview] = useState(null);
 
   useEffect(() => {
     fetchHeroContent();
@@ -110,11 +116,45 @@ const HeroManagement = () => {
     if (file) {
       if (type === 'profile') {
         setProfileImage(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setProfilePreview(reader.result);
+        reader.readAsDataURL(file);
       } else {
         setBackgroundImage(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setBackgroundPreview(reader.result);
+        reader.readAsDataURL(file);
       }
     }
   };
+
+  const handleProfileDrop = (e) => {
+    e.preventDefault();
+    setIsProfileDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setProfilePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const handleProfileDragOver = (e) => { e.preventDefault(); setIsProfileDragOver(true); };
+  const handleProfileDragLeave = (e) => { e.preventDefault(); setIsProfileDragOver(false); };
+
+  const handleBackgroundDrop = (e) => {
+    e.preventDefault();
+    setIsBackgroundDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setBackgroundImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setBackgroundPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  const handleBackgroundDragOver = (e) => { e.preventDefault(); setIsBackgroundDragOver(true); };
+  const handleBackgroundDragLeave = (e) => { e.preventDefault(); setIsBackgroundDragOver(false); };
 
   if (loading) {
     return (
@@ -261,13 +301,41 @@ const HeroManagement = () => {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Profile Image
               </label>
-              <input
-                type="file"
-                id="profile-image"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, 'profile')}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
+              <div
+                onDragOver={handleProfileDragOver}
+                onDragLeave={handleProfileDragLeave}
+                onDrop={handleProfileDrop}
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                  isProfileDragOver ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 hover:border-indigo-300'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-2xl text-gray-400">📤</span>
+                  <p className="text-xs text-gray-600">
+                    {isProfileDragOver ? 'Drop your image here' : 'Drag & drop an image here, or click to browse'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => profileInputRef.current?.click()}
+                    className="text-indigo-600 hover:text-indigo-700 text-xs font-medium"
+                  >
+                    Browse Files
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="profile-image"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'profile')}
+                  ref={profileInputRef}
+                  className="hidden"
+                />
+              </div>
+              {profilePreview && (
+                <div className="mt-3">
+                  <img src={profilePreview} alt="Profile Preview" className="w-32 h-32 object-cover rounded-lg border" />
+                </div>
+              )}
               <p className="text-xs text-slate-500 mt-1">Recommended: Square image, 400x400px or larger</p>
             </div>
 
@@ -275,13 +343,41 @@ const HeroManagement = () => {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Background Image
               </label>
-              <input
-                type="file"
-                id="background-image"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, 'background')}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-              />
+              <div
+                onDragOver={handleBackgroundDragOver}
+                onDragLeave={handleBackgroundDragLeave}
+                onDrop={handleBackgroundDrop}
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                  isBackgroundDragOver ? 'border-purple-400 bg-purple-50' : 'border-slate-300 hover:border-purple-300'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-2xl text-gray-400">📤</span>
+                  <p className="text-xs text-gray-600">
+                    {isBackgroundDragOver ? 'Drop your image here' : 'Drag & drop an image here, or click to browse'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => backgroundInputRef.current?.click()}
+                    className="text-purple-600 hover:text-purple-700 text-xs font-medium"
+                  >
+                    Browse Files
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="background-image"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'background')}
+                  ref={backgroundInputRef}
+                  className="hidden"
+                />
+              </div>
+              {backgroundPreview && (
+                <div className="mt-3">
+                  <img src={backgroundPreview} alt="Background Preview" className="w-32 h-20 object-cover rounded-lg border" />
+                </div>
+              )}
               <p className="text-xs text-slate-500 mt-1">Recommended: Landscape image, 1920x1080px or larger</p>
             </div>
           </div>

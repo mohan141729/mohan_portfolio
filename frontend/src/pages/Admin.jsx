@@ -10,7 +10,8 @@ import {
   FaPlus,
   FaUser,
   FaInfoCircle,
-  FaFileAlt
+  FaFileAlt,
+  FaRobot
 } from 'react-icons/fa';
 import { buildApiUrl, getRequestConfig } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -268,6 +269,21 @@ const Admin = () => {
               <div>
                 <h3 className="font-semibold text-teal-800 text-sm sm:text-base">Manage Resume</h3>
                 <p className="text-xs sm:text-sm text-teal-600">Upload and manage your CV</p>
+              </div>
+            </div>
+          </Link>
+          {/* New Quick Action: Manage AI Tools */}
+          <Link
+            to="/admin/ai-tools"
+            className="group p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-300 border border-blue-200 hover:border-blue-300"
+          >
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <FaRobot className="text-white" size={18} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-800 text-sm sm:text-base">Manage AI Tools</h3>
+                <p className="text-xs sm:text-sm text-blue-600">Add or edit AI tools</p>
               </div>
             </div>
           </Link>

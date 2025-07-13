@@ -40,8 +40,7 @@ const Project = mongoose.model('Project', projectSchema);
 const skillSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: String,
-  proficiency: { type: Number, default: 50 },
-  icon: String,
+  proficiency: { type: Number, default: 50 }
 }, { timestamps: true });
 
 const Skill = mongoose.model('Skill', skillSchema);
@@ -153,12 +152,12 @@ async function seedData() {
     const skillCount = await Skill.countDocuments();
     if (skillCount === 0) {
       await Skill.create([
-        { name: 'React', category: 'Frontend', proficiency: 90, icon: 'react' },
-        { name: 'Node.js', category: 'Backend', proficiency: 85, icon: 'nodejs' },
-        { name: 'JavaScript', category: 'Programming', proficiency: 95, icon: 'javascript' },
-        { name: 'Python', category: 'Programming', proficiency: 80, icon: 'python' },
-        { name: 'SQL', category: 'Database', proficiency: 85, icon: 'database' },
-        { name: 'Git', category: 'Tools', proficiency: 90, icon: 'git' }
+        { name: 'React', category: 'Frontend', proficiency: 90 },
+        { name: 'Node.js', category: 'Backend', proficiency: 85 },
+        { name: 'JavaScript', category: 'Programming', proficiency: 95 },
+        { name: 'Python', category: 'Programming', proficiency: 80 },
+        { name: 'SQL', category: 'Database', proficiency: 85 },
+        { name: 'Git', category: 'Tools', proficiency: 90 }
       ]);
       console.log('✅ Seeded sample skills.');
     } else {

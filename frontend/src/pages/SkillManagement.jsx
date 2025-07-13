@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { buildApiUrl, getRequestConfig, ENDPOINTS } from '../config/api';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,14 +33,25 @@ const SkillManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
-    proficiency: 50,
-    icon: ''
+    proficiency: 50
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const { logout } = useAuth();
+
+  // Ensure resetForm is defined before use
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      category: '',
+      proficiency: 50
+    });
+    setEditingSkill(null);
+    setError('');
+    setSuccess('');
+  };
 
   // Debug showForm state
   useEffect(() => {
@@ -75,18 +86,6 @@ const SkillManagement = () => {
     }));
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      category: '',
-      proficiency: 50,
-      icon: ''
-    });
-    setEditingSkill(null);
-    setError('');
-    setSuccess('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -94,23 +93,20 @@ const SkillManagement = () => {
     setSuccess('');
 
     try {
-            const url = editingSkill
+      const body = JSON.stringify(formData);
+      const url = editingSkill
         ? `${buildApiUrl(ENDPOINTS.SKILLS)}/${editingSkill._id || editingSkill.id}`
         : buildApiUrl(ENDPOINTS.SKILLS);
-      
       const method = editingSkill ? 'PUT' : 'POST';
-
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body
       });
-
       const data = await safeJson(response);
-
       if (response.ok) {
         setSuccess(editingSkill ? 'Skill updated successfully!' : 'Skill created successfully!');
         resetForm();
@@ -131,8 +127,7 @@ const SkillManagement = () => {
     setFormData({
       name: skill.name,
       category: skill.category,
-      proficiency: skill.proficiency,
-      icon: skill.icon
+      proficiency: skill.proficiency
     });
     setShowForm(true);
   };
@@ -290,20 +285,6 @@ const SkillManagement = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Icon (CSS Class)
-                  </label>
-                  <input
-                    type="text"
-                    name="icon"
-                    value={formData.icon}
-                    onChange={handleInputChange}
-                    placeholder="fab fa-react"
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Proficiency Level: {formData.proficiency}%
                   </label>
                   <input
@@ -346,56 +327,66 @@ const SkillManagement = () => {
 
       {/* Skills List */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {skills.map((skill) => (
-          <motion.div
-            key={skill._id || skill.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {skill.icon && (
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                    <i className={`${skill.icon} text-white text-lg`}></i>
+        {skills
+          .filter(skill => {
+            // Only include skills with at least one non-empty unique identifier
+            return skill && (
+              (skill._id && skill._id !== '') ||
+              (skill.id && skill.id !== '') ||
+              (skill.name && skill.name !== '')
+            );
+          })
+          .map((skill, idx) => {
+            // Always generate a unique, non-empty key
+            let key = '';
+            if (skill._id && skill._id !== '') key = skill._id;
+            else if (skill.id && skill.id !== '') key = skill.id;
+            else if (skill.name && skill.name !== '') key = `${skill.name}-${idx}`;
+            else key = `skill-${idx}`;
+            return (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl transition-all duration-300"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-800">{skill.name || 'Unnamed Skill'}</h3>
+                      <p className="text-sm text-slate-600">{skill.category || 'Uncategorized'}</p>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-800">{skill.name}</h3>
-                  <p className="text-sm text-slate-600">{skill.category}</p>
                 </div>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-slate-600 mb-2">
-                <span>Proficiency</span>
-                <span>{skill.proficiency}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${skill.proficiency}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(skill)}
-                className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
-              >
-                <FaEdit /> Edit
-              </button>
-              <button
-                onClick={() => handleDelete(skill._id || skill.id)}
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
-              >
-                <FaTrash /> Delete
-              </button>
-            </div>
-          </motion.div>
-        ))}
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm text-slate-600 mb-2">
+                    <span>Proficiency</span>
+                    <span>{typeof skill.proficiency === 'number' ? skill.proficiency : 0}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${typeof skill.proficiency === 'number' ? skill.proficiency : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(skill)}
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
+                  >
+                    <FaEdit /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(skill._id || skill.id)}
+                    className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1 font-semibold"
+                  >
+                    <FaTrash /> Delete
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { buildApiUrl, getRequestConfig, getFormDataConfig, ENDPOINTS } from '../config/api';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,6 +49,8 @@ const CertificationManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef();
 
   const { logout } = useAuth();
 
@@ -95,6 +97,30 @@ const CertificationManagement = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
   };
 
   const resetForm = () => {
@@ -389,12 +415,35 @@ const CertificationManagement = () => {
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Certification Image
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
-                  />
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                      isDragOver ? 'border-orange-400 bg-orange-50' : 'border-slate-300 hover:border-orange-300'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <FaUpload className="text-2xl text-gray-400" />
+                      <p className="text-xs text-gray-600">
+                        {isDragOver ? 'Drop your image here' : 'Drag & drop an image here, or click to browse'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-orange-600 hover:text-orange-700 text-xs font-medium"
+                      >
+                        Browse Files
+                      </button>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      ref={fileInputRef}
+                      className="hidden"
+                    />
+                  </div>
                   {imagePreview && (
                     <div className="mt-3">
                       <img src={imagePreview} alt="Preview" className="w-32 h-20 object-cover rounded-lg border" />

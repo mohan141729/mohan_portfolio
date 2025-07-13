@@ -106,8 +106,7 @@ const Admin = mongoose.model('Admin', adminSchema);
 const skillSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: String,
-  proficiency: { type: Number, default: 50 },
-  icon: String,
+  proficiency: { type: Number, default: 50 }
 }, { timestamps: true });
 
 const Skill = mongoose.model('Skill', skillSchema);
@@ -380,14 +379,16 @@ app.get('/api/skills', (req, res) => {
 
 // API endpoint: Create skill (protected)
 app.post('/api/skills', authenticateToken, (req, res) => {
-  const { name, category, proficiency, icon } = req.body;
+  const { name, category, proficiency } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Skill name is required' });
   }
 
   const newSkill = new Skill({
-    name, category, proficiency: proficiency || 50, icon
+    name,
+    category,
+    proficiency: proficiency || 50
   });
 
   newSkill.save()
@@ -396,15 +397,15 @@ app.post('/api/skills', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Update skill (protected)
 app.put('/api/skills/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  const { name, category, proficiency, icon } = req.body;
+  const { name, category, proficiency } = req.body;
 
-  Skill.findByIdAndUpdate(id, { name, category, proficiency, icon }, { new: true })
+  Skill.findByIdAndUpdate(id, { name, category, proficiency }, { new: true })
     .then(skill => {
       if (!skill) {
         return res.status(404).json({ error: 'Skill not found' });
@@ -413,7 +414,7 @@ app.put('/api/skills/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Delete skill (protected)
@@ -829,7 +830,7 @@ app.get('/api/public/resume', (req, res) => {
 });
 
 // Upload resume endpoint
-app.post('/api/resume', authenticateToken, async (req, res) => {
+app.post('/api/resume', authenticateToken, upload.single('resume'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
