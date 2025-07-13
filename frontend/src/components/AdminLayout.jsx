@@ -13,7 +13,8 @@ import {
   FaUserCog,
   FaFileAlt,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaRobot
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -78,6 +79,13 @@ const AdminLayout = () => {
       icon: FaCode,
       description: 'Manage technical skills',
       color: 'from-green-500 to-green-600'
+    },
+    { 
+      name: 'AI Tools', 
+      path: '/admin/ai-tools', 
+      icon: FaRobot,
+      description: 'Manage AI tools',
+      color: 'from-indigo-500 to-indigo-700'
     },
     { 
       name: 'Certifications', 

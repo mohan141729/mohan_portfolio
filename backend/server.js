@@ -187,6 +187,14 @@ const ratingSchema = new mongoose.Schema({
 });
 const ProjectRating = mongoose.model('ProjectRating', ratingSchema);
 
+// --- AI Tool Model ---
+const aiToolSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  order: { type: Number, default: 0 },
+  iconImage: { type: String }, // URL or file path
+}, { timestamps: true });
+const AITool = mongoose.model('AITool', aiToolSchema);
+
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.admin_token || req.headers.authorization?.split(' ')[1];
@@ -1125,6 +1133,121 @@ app.get('/api/stats', authenticateToken, (req, res) => {
 app.get('/api/debug-cookies', (req, res) => {
   res.json({ cookies: req.cookies });
 });
+
+// --- AI Tools API ---
+// Public: Get all AI tools (sorted by order)
+app.get('/api/ai-tools', async (req, res) => {
+  try {
+    const tools = await AITool.find().sort({ order: 1 });
+    res.json(tools);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch AI tools' });
+  }
+});
+
+// Admin: Add new AI tool (with optional icon image upload to Cloudinary)
+app.post('/api/ai-tools', authenticateToken, upload.single('iconImage'), async (req, res) => {
+  try {
+    const { name, order } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    let iconImage = undefined;
+    let parsedOrder = order !== undefined ? Number(order) : 0;
+    if (req.file) {
+      // Upload to Cloudinary
+      const streamUpload = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ folder: 'ai-tools' }, (error, result) => {
+            if (result) resolve(result.secure_url);
+            else reject(error);
+          });
+          streamifier.createReadStream(buffer).pipe(stream);
+        });
+      };
+      try {
+        iconImage = await streamUpload(req.file.buffer);
+      } catch (err) {
+        console.error('Cloudinary upload error:', err);
+        return res.status(400).json({ error: 'Failed to upload image to Cloudinary', details: err.message });
+      }
+    }
+    const tool = new AITool({ name, order: parsedOrder, iconImage });
+    await tool.save();
+    res.status(201).json(tool);
+  } catch (err) {
+    console.error('AI Tool POST error:', err);
+    res.status(400).json({ error: 'Failed to add AI tool', details: err.message });
+  }
+});
+
+// Admin: Update AI tool (with optional icon image upload to Cloudinary)
+app.put('/api/ai-tools/:id', authenticateToken, upload.single('iconImage'), async (req, res) => {
+  try {
+    const { name, order } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    let update = { name };
+    if (order !== undefined) update.order = Number(order);
+    if (req.file) {
+      // Upload to Cloudinary
+      const streamUpload = (buffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ folder: 'ai-tools' }, (error, result) => {
+            if (result) resolve(result.secure_url);
+            else reject(error);
+          });
+          streamifier.createReadStream(buffer).pipe(stream);
+        });
+      };
+      try {
+        update.iconImage = await streamUpload(req.file.buffer);
+      } catch (err) {
+        console.error('Cloudinary upload error:', err);
+        return res.status(400).json({ error: 'Failed to upload image to Cloudinary', details: err.message });
+      }
+    }
+    const tool = await AITool.findByIdAndUpdate(
+      req.params.id,
+      update,
+      { new: true }
+    );
+    if (!tool) return res.status(404).json({ error: 'AI tool not found' });
+    res.json(tool);
+  } catch (err) {
+    console.error('AI Tool PUT error:', err);
+    res.status(400).json({ error: 'Failed to update AI tool', details: err.message });
+  }
+});
+
+// Admin: Delete AI tool
+app.delete('/api/ai-tools/:id', authenticateToken, async (req, res) => {
+  try {
+    const tool = await AITool.findByIdAndDelete(req.params.id);
+    if (!tool) return res.status(404).json({ error: 'AI tool not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to delete AI tool' });
+  }
+});
+
+// Admin: Reorder AI tools (bulk update)
+app.put('/api/ai-tools', authenticateToken, async (req, res) => {
+  try {
+    const { order } = req.body; // [{_id, order}, ...]
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'Order must be an array' });
+    for (const item of order) {
+      await AITool.findByIdAndUpdate(item._id, { order: item.order });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to reorder AI tools' });
+  }
+});
+
+// Serve uploaded AI tool images statically
+app.use('/uploads/ai-tools', express.static(path.join(__dirname, 'uploads', 'ai-tools')));
 
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

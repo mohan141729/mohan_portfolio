@@ -26,6 +26,7 @@ export const ENDPOINTS = {
   PUBLIC_SKILLS: '/api/skills',
   PUBLIC_CERTIFICATIONS: '/api/certifications',
   PUBLIC_RESUME: '/api/public/resume',
+  PUBLIC_AI_TOOLS: '/api/ai-tools',
   
   // Protected endpoints
   HERO: '/api/hero',
@@ -36,6 +37,7 @@ export const ENDPOINTS = {
   CERTIFICATIONS: '/api/certifications',
   RESUME: '/api/resume',
   CONTACT_MESSAGES: '/api/contact',
+  AI_TOOLS: '/api/ai-tools',
   
   // Contact form submission
   CONTACT_SUBMIT: '/api/contact',

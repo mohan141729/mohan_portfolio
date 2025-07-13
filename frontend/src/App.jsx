@@ -22,6 +22,8 @@ import ResumeManagement from './pages/ResumeManagement';
 import AllProjects from './pages/AllProjects';
 import LoginModal from './components/LoginModal';
 import AIAssistant from './components/AIAssistant';
+import AITools from './components/AITools';
+import AdminAITools from './pages/AdminAITools';
 
 function Portfolio() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -34,6 +36,7 @@ function Portfolio() {
         <Hero />
         <About />
         <Projects />
+        <AITools />
         <Skills />
         <Certifications />
         <Contact />
@@ -79,6 +82,7 @@ function App() {
             <Route path="about" element={<AboutManagement />} />
             <Route path="projects" element={<ProjectManagement />} />
             <Route path="skills" element={<SkillManagement />} />
+            <Route path="ai-tools" element={<AdminAITools />} />
             <Route path="certifications" element={<CertificationManagement />} />
             <Route path="resume" element={<ResumeManagement />} />
             <Route path="settings" element={<AdminSettings />} />
