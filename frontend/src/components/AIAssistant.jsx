@@ -19,7 +19,6 @@ export default function AIAssistant() {
   ]);
   const [portfolioData, setPortfolioData] = useState({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [] });
   const [suggestions, setSuggestions] = useState([]);
-  const [projectRatings, setProjectRatings] = useState({}); // { [projectId]: { average, count } }
   const chatEndRef = useRef(null);
   const [iconPosition, setIconPosition] = useState({ x: 24, y: window.innerHeight - 100 });
   const [dragging, setDragging] = useState(false);
@@ -43,28 +42,19 @@ export default function AIAssistant() {
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_CONTACT)),
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_CERTIFICATIONS)),
           ]);
+          
           const projects = projectsRes.ok ? await projectsRes.json() : [];
-          // Fetch ratings for all projects
-          const ratingsObj = {};
-          await Promise.all(projects.map(async (p) => {
-            const id = p._id || p.id;
-            const res = await fetch(buildApiUrl(`/api/projects/${id}/ratings`));
-            if (res.ok) {
-              const data = await res.json();
-              ratingsObj[id] = data;
-            }
-          }));
-          setProjectRatings(ratingsObj);
           const skills = skillsRes.ok ? await skillsRes.json() : [];
           const resume = resumeRes.ok ? await resumeRes.json() : null;
           const hero = heroRes.ok ? await heroRes.json() : null;
           const about = aboutRes.ok ? await aboutRes.json() : null;
           const contact = contactRes.ok ? await contactRes.json() : null;
           const certifications = certRes.ok ? await certRes.json() : [];
+          
           setPortfolioData({ projects, skills, resume, hero, about, contact, certifications });
         } catch (err) {
+          console.error('Error fetching portfolio data:', err);
           setPortfolioData({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [] });
-          setProjectRatings({});
         }
       };
       fetchData();
@@ -137,8 +127,6 @@ export default function AIAssistant() {
     setDragging(false);
   };
 
-  // Mouse drag for desktop (optional, but only enable on mobile for now)
-
   const formatPortfolioData = () => {
     const { projects, skills, resume, hero, about, contact, certifications } = portfolioData;
     let str = '';
@@ -152,12 +140,9 @@ export default function AIAssistant() {
       str += `Contact:\n- Email: ${contact.email}\n- Location: ${contact.location}\n- GitHub: ${contact.github_url}\n- LinkedIn: ${contact.linkedin_url}\n`;
     }
     if (projects && projects.length) {
-      str += `Projects (title, description, tech, average rating, rating count):\n`;
+      str += `Projects (title, description, tech):\n`;
       str += projects.map(p => {
-        const id = p._id || p.id;
-        const rating = projectRatings[id]?.average ? (Math.round(projectRatings[id].average * 10) / 10) : 0;
-        const count = projectRatings[id]?.count || 0;
-        return `- ${p.title}: ${p.description} [${Array.isArray(p.tech) ? p.tech.join(', ') : p.tech}] | Rating: ${rating} / 5 (${count} rating${count !== 1 ? 's' : ''})`;
+        return `- ${p.title}: ${p.description} [${Array.isArray(p.tech) ? p.tech.join(', ') : p.tech}]`;
       }).join('\n');
       str += '\n';
     }
@@ -192,8 +177,15 @@ export default function AIAssistant() {
     const userMessage = { role: 'user', content: input };
     setChat(prev => [...prev, userMessage]);
     setInput("");
+    
     try {
-      const systemPrompt = `You are Mohan’s AI Portfolio Assistant.\n\nYour role is to act as a smart, helpful, and context-aware guide for anyone visiting Mohan’s portfolio — including recruiters, developers, collaborators, and learners. You speak clearly, encouragingly, and intelligently.\n\nHere is Mohan's real portfolio data (always use this for answers):\n${formatPortfolioData()}\n\nYour main functions:\n1. Explain Projects — Give clear, concise summaries of any of Mohan’s projects and what tech is used.\n2. Tech Help — Answer questions like “How did Mohan implement X?” or “Why use MongoDB here?”\n3. Recruiter Support — Highlight his experience, skills, availability, and generate a summary pitch.\n4. Learning Guide — If asked “How can I build this?” or “Where should I start?”, provide beginner-friendly steps and resources.\n5. Resume & Certifications — Help users find, view, or review Mohan’s resume and certifications.\n6. Conversational — Speak like a supportive developer mentor. Avoid buzzwords. Be human.\n\nYour goal is to make Mohan look intelligent, resourceful, and impactful — and to help the visitor understand or build what he’s built.\n\nIf the user asks to contact Mohan or book a meeting, share his preferred contact info or Calendly link (if provided in context).`;
+      const systemPrompt = `You are Mohan's AI Portfolio Assistant.\n\nYour role is to act as a smart, helpful, and context-aware guide for anyone visiting Mohan's portfolio — including recruiters, developers, collaborators, and learners. You speak clearly, encouragingly, and intelligently.\n\nHere is Mohan's real portfolio data (always use this for answers):\n${formatPortfolioData()}\n\nYour main functions:\n1. Explain Projects — Give clear, concise summaries of any of Mohan's projects and what tech is used.\n2. Tech Help — Answer questions like "How did Mohan implement X?" or "Why use MongoDB here?"\n3. Recruiter Support — Highlight his experience, skills, availability, and generate a summary pitch.\n4. Learning Guide — If asked "How can I build this?" or "Where should I start?", provide beginner-friendly steps and resources.\n5. Resume & Certifications — Help users find, view, or review Mohan's resume and certifications.\n6. Conversational — Speak like a supportive developer mentor. Avoid buzzwords. Be human.\n\nYour goal is to make Mohan look intelligent, resourceful, and impactful — and to help the visitor understand or build what he's built.\n\nIf the user asks to contact Mohan or book a meeting, share his preferred contact info or Calendly link (if provided in context).`;
+      
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      if (!apiKey) {
+        throw new Error('OpenRouter API key not configured');
+      }
+      
       const res = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
         model: 'mistralai/mistral-7b-instruct',
         messages: [
@@ -203,15 +195,30 @@ export default function AIAssistant() {
         ]
       }, {
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 30000 // 30 second timeout
       });
+      
       const aiReply = res.data.choices[0].message.content;
       setChat(prev => [...prev, { role: 'assistant', content: aiReply }]);
     } catch (err) {
-      setError("Failed to get response. Please try again.");
-      setChat(prev => [...prev, { role: 'error', content: "Failed to get response. Please try again." }]);
+      console.error('AI Assistant error:', err);
+      let errorMessage = "Failed to get response. Please try again.";
+      
+      if (err.response?.status === 401) {
+        errorMessage = "AI service authentication failed. Please contact the administrator.";
+      } else if (err.response?.status === 429) {
+        errorMessage = "Too many requests. Please wait a moment and try again.";
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (err.message === 'OpenRouter API key not configured') {
+        errorMessage = "AI service not configured. Please contact the administrator.";
+      }
+      
+      setError(errorMessage);
+      setChat(prev => [...prev, { role: 'error', content: errorMessage }]);
     }
     setLoading(false);
   };
