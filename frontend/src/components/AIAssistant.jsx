@@ -17,7 +17,7 @@ export default function AIAssistant() {
       content: "Hi! I'm Mohan's AI Assistant. Ask me anything about Mohan's projects, tech stack, or how to build something similar!"
     }
   ]);
-  const [portfolioData, setPortfolioData] = useState({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [] });
+  const [portfolioData, setPortfolioData] = useState({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [], aiTools: [] });
   const [suggestions, setSuggestions] = useState([]);
   const chatEndRef = useRef(null);
   const [iconPosition, setIconPosition] = useState({ x: 24, y: window.innerHeight - 100 });
@@ -33,7 +33,7 @@ export default function AIAssistant() {
     if (open) {
       const fetchData = async () => {
         try {
-          const [projectsRes, skillsRes, resumeRes, heroRes, aboutRes, contactRes, certRes] = await Promise.all([
+          const [projectsRes, skillsRes, resumeRes, heroRes, aboutRes, contactRes, certRes, aiToolsRes] = await Promise.all([
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_PROJECTS)),
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_SKILLS)),
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_RESUME)),
@@ -41,6 +41,7 @@ export default function AIAssistant() {
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_ABOUT)),
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_CONTACT)),
             fetch(buildApiUrl(ENDPOINTS.PUBLIC_CERTIFICATIONS)),
+            fetch(buildApiUrl(ENDPOINTS.PUBLIC_AI_TOOLS)),
           ]);
           
           const projects = projectsRes.ok ? await projectsRes.json() : [];
@@ -50,11 +51,12 @@ export default function AIAssistant() {
           const about = aboutRes.ok ? await aboutRes.json() : null;
           const contact = contactRes.ok ? await contactRes.json() : null;
           const certifications = certRes.ok ? await certRes.json() : [];
+          const aiTools = aiToolsRes.ok ? await aiToolsRes.json() : [];
           
-          setPortfolioData({ projects, skills, resume, hero, about, contact, certifications });
+          setPortfolioData({ projects, skills, resume, hero, about, contact, certifications, aiTools });
         } catch (err) {
           console.error('Error fetching portfolio data:', err);
-          setPortfolioData({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [] });
+          setPortfolioData({ projects: [], skills: [], resume: null, hero: null, about: null, contact: null, certifications: [], aiTools: [] });
         }
       };
       fetchData();
@@ -73,7 +75,7 @@ export default function AIAssistant() {
       setSuggestions([]);
       return;
     }
-    const { projects, skills, certifications } = portfolioData;
+    const { projects, skills, certifications, aiTools } = portfolioData;
     const lower = input.toLowerCase();
     let sugg = [];
     if (projects && projects.length) {
@@ -84,6 +86,9 @@ export default function AIAssistant() {
     }
     if (certifications && certifications.length) {
       sugg = sugg.concat(certifications.filter(c => c.name && c.name.toLowerCase().includes(lower)).map(c => c.name));
+    }
+    if (aiTools && aiTools.length) {
+      sugg = sugg.concat(aiTools.filter(t => t.name && t.name.toLowerCase().includes(lower)).map(t => t.name));
     }
     setSuggestions(sugg.slice(0, 5));
   }, [input, portfolioData]);
@@ -128,7 +133,7 @@ export default function AIAssistant() {
   };
 
   const formatPortfolioData = () => {
-    const { projects, skills, resume, hero, about, contact, certifications } = portfolioData;
+    const { projects, skills, resume, hero, about, contact, certifications, aiTools } = portfolioData;
     let str = '';
     if (hero) {
       str += `Hero/Profile:\n- Name: ${hero.name}\n- Title: ${hero.title}\n- Subtitle: ${hero.subtitle}\n- Description: ${hero.description}\n- Social: GitHub: ${hero.github_url}, LinkedIn: ${hero.linkedin_url}\n- Welcome: ${hero.welcome_text}\n`;
@@ -149,6 +154,11 @@ export default function AIAssistant() {
     if (skills && skills.length) {
       str += `Skills:\n`;
       str += skills.map(s => `- ${s.name} (${s.category})`).join(', ');
+      str += '\n';
+    }
+    if (aiTools && aiTools.length) {
+      str += `AI Tools:\n`;
+      str += aiTools.map(t => `- ${t.name}${t.description ? `: ${t.description}` : ''}`).join('\n');
       str += '\n';
     }
     if (certifications && certifications.length) {
@@ -187,7 +197,7 @@ export default function AIAssistant() {
       }
       
       const res = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-        model: 'mistralai/mistral-7b-instruct',
+        model: 'deepseek/deepseek-chat-v3-0324:free',
         messages: [
           { role: 'system', content: systemPrompt },
           ...chat.filter(m => m.role !== 'error').map(m => ({ role: m.role, content: m.content })),
