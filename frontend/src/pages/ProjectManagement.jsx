@@ -41,6 +41,7 @@ const ProjectManagement = () => {
     featured: false,
     live: '',
     github: '',
+    demo_video: '',
     image: null
   });
   const [imagePreview, setImagePreview] = useState(null);
@@ -130,6 +131,7 @@ const ProjectManagement = () => {
       featured: false,
       live: '',
       github: '',
+      demo_video: '',
       image: null
     });
     setImagePreview(null);
@@ -200,6 +202,7 @@ const ProjectManagement = () => {
       featured: featuredValue,
       live: project.live,
       github: project.github,
+      demo_video: project.demo_video || '',
       image: null
     });
             setImagePreview(project.image ? `${buildApiUrl('')}${project.image}` : null);
@@ -403,6 +406,20 @@ const ProjectManagement = () => {
                       className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Demo Video URL (MP4, YouTube short link, or CDN)
+                  </label>
+                  <input
+                    type="url"
+                    name="demo_video"
+                    value={formData.demo_video}
+                    onChange={handleInputChange}
+                    placeholder="https://cdn.example.com/demo.mp4 or https://youtu.be/xyz"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                  />
                 </div>
 
                 <div>

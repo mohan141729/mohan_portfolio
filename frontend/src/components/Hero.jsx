@@ -103,11 +103,9 @@ const Hero = () => {
   };
 
   const handleDownloadResume = () => {
-    if (resume) {
-      const isFullUrl = /^https?:\/\//i.test(resume.file_path);
-      const url = isFullUrl ? resume.file_path : `${buildApiUrl('')}${resume.file_path}`;
-      window.open(url, '_blank');
-    }
+    if (!resume) return;
+    const url = `${buildApiUrl(ENDPOINTS.PUBLIC_RESUME)}/download`;
+    window.open(url, '_blank');
   };
 
   if (loading) {

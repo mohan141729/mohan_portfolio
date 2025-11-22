@@ -20,7 +20,6 @@ import ContactManagement from './pages/ContactManagement';
 import AdminSettings from './pages/AdminSettings';
 import ResumeManagement from './pages/ResumeManagement';
 import LoginModal from './components/LoginModal';
-import AIAssistant from './components/AIAssistant';
 import AITools from './components/AITools';
 import AdminAITools from './pages/AdminAITools';
 
@@ -31,7 +30,6 @@ function Portfolio() {
     <div className="bg-gray-100 min-h-screen flex flex-col">
       <Navbar onAdminLogin={() => setShowLoginModal(true)} />
       <main className="pt-20 flex-1">
-        <AIAssistant />
         <Hero />
         <About />
         <Projects />
@@ -49,7 +47,7 @@ function Portfolio() {
 function RequireAuth({ children }) {
   const location = useLocation();
   const { isAuthenticated, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -57,22 +55,22 @@ function RequireAuth({ children }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
+
   return children;
 }
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Portfolio />} />
-          
+
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
             <Route index element={<Admin />} />
@@ -86,7 +84,7 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="contact" element={<ContactManagement />} />
           </Route>
-          
+
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -10,7 +10,8 @@ const resumeSchema = new mongoose.Schema({
 const Resume = mongoose.model('Resume', resumeSchema);
 
 async function fixResume() {
-  await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://techlearn2005:mohanPortfolio@mohanportfolio.otpcvr7.mongodb.net/portfolio';
+  await mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
   // Remove all resumes that are not Cloudinary URLs
   const result = await Resume.deleteMany({ file_path: { $not: /^https?:\/\/res\.cloudinary\.com\// } });

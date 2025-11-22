@@ -12,10 +12,17 @@ require('dotenv').config();
 // 1. Import nodemailer at the top
 const nodemailer = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
-cloudinary.config({
-  secure: true,
-  cloudinary_url: process.env.CLOUDINARY_URL
-});
+// Configure Cloudinary: prefer CLOUDINARY_URL if provided, else use individual vars
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config({ secure: true });
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 const streamifier = require('streamifier');
 
 const app = express();
@@ -42,7 +49,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('ALLOWED_ORIGINS:', allowedOrigins);
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     if (!isProduction) {
@@ -78,12 +85,12 @@ mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => {
-  console.log('Connected to MongoDB Atlas successfully!');
-})
-.catch((err) => {
-  console.error('MongoDB connection error:', err);
-});
+  .then(() => {
+    console.log('Connected to MongoDB Atlas successfully!');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
 // Mongoose Models
 const projectSchema = new mongoose.Schema({
@@ -95,6 +102,7 @@ const projectSchema = new mongoose.Schema({
   live: String,
   github: String,
   image: String,
+  demo_video: String,
 }, { timestamps: true });
 
 const Project = mongoose.model('Project', projectSchema);
@@ -175,8 +183,15 @@ const ContactInfo = mongoose.model('ContactInfo', contactInfoSchema);
 
 const resumeSchema = new mongoose.Schema({
   filename: { type: String, required: true },
-  file_path: { type: String, required: true },
+  // For legacy entries this may be present; new uploads store binary in MongoDB
+  file_path: { type: String },
   size: { type: Number, required: true },
+  // Store the binary file directly in MongoDB
+  data: Buffer,
+  content_type: String,
+  // Legacy Cloudinary fields kept for backward compatibility
+  cloudinary_public_id: { type: String },
+  cloudinary_resource_type: { type: String },
 }, { timestamps: true });
 
 const Resume = mongoose.model('Resume', resumeSchema);
@@ -185,6 +200,8 @@ const Resume = mongoose.model('Resume', resumeSchema);
 const ratingSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String }, // Optional comment
+  user: { type: String, default: 'Anonymous' }, // Optional user name
   createdAt: { type: Date, default: Date.now }
 });
 const ProjectRating = mongoose.model('ProjectRating', ratingSchema);
@@ -200,7 +217,7 @@ const AITool = mongoose.model('AITool', aiToolSchema);
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.admin_token || req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
   }
@@ -223,6 +240,22 @@ async function uploadBufferToCloudinary(buffer, options) {
     });
     streamifier.createReadStream(buffer).pipe(stream);
   });
+}
+
+// Helper to force attachment download for existing Cloudinary URLs
+function toCloudinaryAttachmentUrl(originalUrl) {
+  try {
+    if (!originalUrl) return originalUrl;
+    // Only handle Cloudinary upload URLs
+    if (!/res\.cloudinary\.com\//i.test(originalUrl)) return originalUrl;
+    if (/\/upload\//.test(originalUrl)) {
+      if (/\/upload\/fl_attachment(,|\/)/.test(originalUrl)) return originalUrl;
+      return originalUrl.replace('/upload/', '/upload/fl_attachment/');
+    }
+    return originalUrl;
+  } catch (_) {
+    return originalUrl;
+  }
 }
 
 // (Move these endpoints here, after authenticateToken is defined)
@@ -258,14 +291,14 @@ app.get('/api/projects', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Create new project (protected)
 app.post('/api/projects', authenticateToken, upload.single('image'), async (req, res) => {
   console.log('PROJECT UPLOAD req.file:', req.file);
   console.log('PROJECT UPLOAD req.body:', req.body);
-  let { title, description, tech, category, featured, live, github } = req.body;
+  let { title, description, tech, category, featured, live, github, demo_video } = req.body;
   if (!category || !category.trim()) {
     category = 'uncategorized';
   } else {
@@ -287,7 +320,7 @@ app.post('/api/projects', authenticateToken, upload.single('image'), async (req,
         imageUrl = result.secure_url;
       }
       const newProject = new Project({
-        title, description, tech, category, featured, live, github, image: imageUrl
+        title, description, tech, category, featured, live, github, demo_video, image: imageUrl
       });
       const savedProject = await newProject.save();
       res.status(201).json({ id: savedProject._id, message: 'Project created successfully' });
@@ -313,7 +346,7 @@ app.post('/api/projects', authenticateToken, upload.single('image'), async (req,
 // API endpoint: Update project (protected)
 app.put('/api/projects/:id', authenticateToken, upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  let { title, description, tech, category, featured, live, github } = req.body;
+  let { title, description, tech, category, featured, live, github, demo_video } = req.body;
   console.log('PROJECT UPDATE req.body:', req.body);
   if (!category || !category.trim()) {
     category = 'uncategorized';
@@ -321,7 +354,7 @@ app.put('/api/projects/:id', authenticateToken, upload.single('image'), async (r
     category = category.trim().toLowerCase();
   }
   console.log('PROJECT UPDATE normalized category:', category);
-  let query = { title, description, tech, category, featured, live, github };
+  let query = { title, description, tech, category, featured, live, github, demo_video };
   if (req.file) {
     try {
       const result = await uploadBufferToCloudinary(req.file.buffer, {
@@ -351,7 +384,7 @@ app.put('/api/projects/:id', authenticateToken, upload.single('image'), async (r
 // API endpoint: Delete project (protected)
 app.delete('/api/projects/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  
+
   Project.findByIdAndDelete(id)
     .then(project => {
       if (!project) {
@@ -361,19 +394,24 @@ app.delete('/api/projects/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // --- Project Ratings API ---
 // POST /api/projects/:projectId/ratings
 app.post('/api/projects/:projectId/ratings', async (req, res) => {
   try {
-    const { rating } = req.body;
+    const { rating, comment, user } = req.body;
     const { projectId } = req.params;
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ error: 'Rating must be 1-5' });
     }
-    const newRating = new ProjectRating({ projectId, rating });
+    const newRating = new ProjectRating({
+      projectId,
+      rating,
+      comment: comment || '',
+      user: user || 'Anonymous'
+    });
     await newRating.save();
     res.status(201).json({ message: 'Rating submitted' });
   } catch (err) {
@@ -385,10 +423,10 @@ app.post('/api/projects/:projectId/ratings', async (req, res) => {
 app.get('/api/projects/:projectId/ratings', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const ratings = await ProjectRating.find({ projectId });
+    const ratings = await ProjectRating.find({ projectId }).sort({ createdAt: -1 });
     const count = ratings.length;
     const avg = count > 0 ? (ratings.reduce((sum, r) => sum + r.rating, 0) / count) : 0;
-    res.json({ average: avg, count });
+    res.json({ average: avg, count, reviews: ratings });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch ratings' });
   }
@@ -402,7 +440,7 @@ app.get('/api/skills', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Create skill (protected)
@@ -448,7 +486,7 @@ app.put('/api/skills/:id', authenticateToken, (req, res) => {
 // API endpoint: Delete skill (protected)
 app.delete('/api/skills/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  
+
   Skill.findByIdAndDelete(id)
     .then(skill => {
       if (!skill) {
@@ -458,7 +496,7 @@ app.delete('/api/skills/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Get all certifications
@@ -469,7 +507,7 @@ app.get('/api/certifications', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Create certification (protected)
@@ -536,7 +574,7 @@ app.put('/api/certifications/:id', authenticateToken, upload.single('image'), as
 // API endpoint: Delete certification (protected)
 app.delete('/api/certifications/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  
+
   Certification.findByIdAndDelete(id)
     .then(certification => {
       if (!certification) {
@@ -546,7 +584,7 @@ app.delete('/api/certifications/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Submit contact form
@@ -567,7 +605,7 @@ app.post('/api/contact', (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Get contact messages (protected)
@@ -578,7 +616,7 @@ app.get('/api/contact', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Update message status (protected)
@@ -595,7 +633,7 @@ app.put('/api/contact/:id', authenticateToken, (req, res) => {
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // API endpoint: Delete contact message (protected)
@@ -662,44 +700,44 @@ app.post('/api/admin/login', (req, res) => {
 
   Admin.findOne({ email })
     .then(admin => {
-    if (!admin) {
-      console.log('Admin not found:', email);
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Verify password
-    bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        console.error('Bcrypt error:', err);
-        return res.status(500).json({ error: 'Authentication error' });
-      }
-      
-      console.log('Password match:', isMatch);
-      
-      if (!isMatch) {
+      if (!admin) {
+        console.log('Admin not found:', email);
         return res.status(401).json({ error: 'Invalid email or password' });
       }
-      
-      // Create JWT
+
+      // Verify password
+      bcrypt.compare(password, admin.password_hash, (err, isMatch) => {
+        if (err) {
+          console.error('Bcrypt error:', err);
+          return res.status(500).json({ error: 'Authentication error' });
+        }
+
+        console.log('Password match:', isMatch);
+
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Create JWT
         const token = jwt.sign({ email: admin.email, id: admin._id }, jwtSecret, { expiresIn: '7d' });
-      console.log('Login successful, token created');
-      
+        console.log('Login successful, token created');
+
         // Set cookie
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('admin_token', token, {
-        httpOnly: true,
+        const isProduction = process.env.NODE_ENV === 'production';
+        res.cookie('admin_token', token, {
+          httpOnly: true,
           secure: isProduction,
           sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
-        
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         res.json({ user: { email: admin.email, id: admin._id }, token });
-    });
+      });
     })
     .catch(err => {
       console.error('Database error:', err);
       res.status(500).json({ error: 'Authentication error' });
-  });
+    });
 });
 
 // Add token verification endpoint
@@ -731,40 +769,40 @@ app.put('/api/admin/change-password', authenticateToken, (req, res) => {
 
   Admin.findOne({ email: req.user.email })
     .then(admin => {
-    if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
-    }
-
-    // Verify current password
-    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: 'Authentication error' });
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Current password is incorrect' });
-      }
-
-      // Hash new password
-      bcrypt.hash(newPassword, 10, (err, newHash) => {
+      // Verify current password
+      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
         if (err) {
-          return res.status(500).json({ error: 'Password hashing error' });
+          return res.status(500).json({ error: 'Authentication error' });
         }
 
-        // Update password in database
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        bcrypt.hash(newPassword, 10, (err, newHash) => {
+          if (err) {
+            return res.status(500).json({ error: 'Password hashing error' });
+          }
+
+          // Update password in database
           Admin.findOneAndUpdate({ email: req.user.email }, { password_hash: newHash })
             .then(() => {
-          res.json({ message: 'Password updated successfully' });
+              res.json({ message: 'Password updated successfully' });
             })
             .catch(err => {
               res.status(500).json({ error: 'Failed to update password' });
+            });
         });
       });
-    });
     })
     .catch(err => {
       res.status(500).json({ error: 'Database error' });
-  });
+    });
 });
 
 // Admin change email endpoint
@@ -783,113 +821,141 @@ app.put('/api/admin/change-email', authenticateToken, (req, res) => {
 
   Admin.findOne({ email: req.user.email })
     .then(admin => {
-    if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
-    }
-
-    // Verify current password
-    bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({ error: 'Authentication error' });
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
       }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Current password is incorrect' });
-      }
-
-      // Check if new email already exists
-        Admin.findOne({ email: newEmail })
-          .then(existingAdmin => {
-        if (existingAdmin) {
-          return res.status(400).json({ error: 'Email already exists' });
+      // Verify current password
+      bcrypt.compare(currentPassword, admin.password_hash, (err, isMatch) => {
+        if (err) {
+          return res.status(500).json({ error: 'Authentication error' });
         }
 
-        // Update email in database
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Check if new email already exists
+        Admin.findOne({ email: newEmail })
+          .then(existingAdmin => {
+            if (existingAdmin) {
+              return res.status(400).json({ error: 'Email already exists' });
+            }
+
+            // Update email in database
             Admin.findOneAndUpdate({ email: req.user.email }, { email: newEmail })
               .then(() => {
-          res.json({ message: 'Email updated successfully' });
+                res.json({ message: 'Email updated successfully' });
               })
               .catch(err => {
                 res.status(500).json({ error: 'Failed to update email' });
-        });
+              });
           })
           .catch(err => {
             res.status(500).json({ error: 'Database error' });
+          });
       });
-    });
     })
     .catch(err => {
       res.status(500).json({ error: 'Database error' });
-  });
+    });
 });
 
-// Resume upload configuration
-const resumeStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'uploads'));
-  },
-  filename: function (req, file, cb) {
-    // Use a unique filename (timestamp + original name)
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'resume-' + uniqueSuffix + ext);
-  }
-});
-const resumeUpload = multer({ storage: resumeStorage });
+// Resume upload now uses Cloudinary via memory storage (defined as `upload`)
 
 // Create resume table if not exists
 // This section is no longer needed as resume functionality is not in the new schema.
 
 // Get resume endpoint (protected)
 app.get('/api/resume', authenticateToken, (req, res) => {
-  Resume.findOne().sort({ createdAt: -1 })
+  Resume.findOne().sort({ createdAt: -1 }).select('-data')
     .then(resume => {
-    if (!resume) {
-      return res.status(404).json({ error: 'No resume found' });
-    }
-    res.json(resume);
+      if (!resume) {
+        return res.status(404).json({ error: 'No resume found' });
+      }
+      res.json(resume);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Public resume endpoint
 app.get('/api/public/resume', (req, res) => {
-  Resume.findOne().sort({ createdAt: -1 })
+  Resume.findOne().sort({ createdAt: -1 }).select('-data')
     .then(resume => {
-    if (!resume) {
-      return res.status(404).json({ error: 'No resume found' });
-    }
-    res.json(resume);
+      if (!resume) {
+        return res.status(404).json({ error: 'No resume found' });
+      }
+      res.json(resume);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
+});
+
+// Public resume download endpoint - redirects to Cloudinary attachment URL
+app.get('/api/public/resume/download', async (req, res) => {
+  try {
+    const resume = await Resume.findOne().sort({ createdAt: -1 });
+    if (!resume) {
+      return res.status(404).json({ error: 'No resume found' });
+    }
+    // If binary data exists, stream it
+    if (resume.data && resume.data.length) {
+      res.setHeader('Content-Type', resume.content_type || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${resume.filename || 'resume.pdf'}"`);
+      return res.send(resume.data);
+    }
+    // Prefer stored direct URL if available
+    if (resume.file_path) {
+      const pathOrUrl = resume.file_path;
+      if (/^https?:\/\//i.test(pathOrUrl)) {
+        return res.redirect(302, pathOrUrl);
+      }
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      return res.redirect(302, `${protocol}://${host}${pathOrUrl}`);
+    }
+    // Legacy Cloudinary public_id fallback
+    if (resume.cloudinary_public_id) {
+      const resourceType = resume.cloudinary_resource_type || 'raw';
+      const url = cloudinary.url(resume.cloudinary_public_id, {
+        resource_type: resourceType,
+        secure: true,
+      });
+      return res.redirect(302, url);
+    }
+    return res.status(404).json({ error: 'Resume file not available' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Upload resume endpoint
-app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), async (req, res) => {
+app.post('/api/resume', authenticateToken, upload.single('resume'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
   try {
-    // Delete existing resume(s)
-    await Resume.deleteMany({});
-
-    // Insert new resume with local file path
     const newResume = new Resume({
       filename: req.file.originalname,
-      file_path: '/uploads/' + req.file.filename, // Public URL path
-      size: req.file.size
+      size: req.file.size,
+      data: req.file.buffer,
+      content_type: req.file.mimetype,
+      // Clear legacy fields on new uploads
+      file_path: undefined,
+      cloudinary_public_id: undefined,
+      cloudinary_resource_type: undefined,
     });
+    // Replace any existing resume
+    await Resume.deleteMany({});
     await newResume.save();
 
     res.status(201).json({
       id: newResume._id,
       filename: newResume.filename,
-      file_path: newResume.file_path,
       size: newResume.size,
       message: 'Resume uploaded successfully'
     });
@@ -900,28 +966,54 @@ app.post('/api/resume', authenticateToken, resumeUpload.single('resume'), async 
 });
 
 // Delete resume endpoint
-app.delete('/api/resume', authenticateToken, (req, res) => {
-  Resume.findOne().sort({ createdAt: -1 })
-    .then(resume => {
+app.delete('/api/resume', authenticateToken, async (req, res) => {
+  try {
+    const resume = await Resume.findOne().sort({ createdAt: -1 });
     if (!resume) {
       return res.status(404).json({ error: 'No resume found' });
     }
+    await Resume.findByIdAndDelete(resume._id);
+    res.json({ message: 'Resume deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    // Delete file from filesystem
-    // const filePath = path.join(__dirname, resume.file_path); // This line is no longer needed
-    // if (fs.existsSync(filePath)) {
-    //   fs.unlinkSync(filePath);
-    // }
-
-    // Delete from database
-      return Resume.findByIdAndDelete(resume._id);
-    })
-    .then(() => {
-        res.json({ message: 'Resume deleted successfully' });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err.message });
-  });
+// Protected resume download endpoint - redirects to Cloudinary attachment URL
+app.get('/api/resume/download', authenticateToken, async (req, res) => {
+  try {
+    const resume = await Resume.findOne().sort({ createdAt: -1 });
+    if (!resume) {
+      return res.status(404).json({ error: 'No resume found' });
+    }
+    if (resume.data && resume.data.length) {
+      res.setHeader('Content-Type', resume.content_type || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${resume.filename || 'resume.pdf'}"`);
+      return res.send(resume.data);
+    }
+    // Prefer stored direct URL if available
+    if (resume.file_path) {
+      const pathOrUrl = resume.file_path;
+      if (/^https?:\/\//i.test(pathOrUrl)) {
+        return res.redirect(302, pathOrUrl);
+      }
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      return res.redirect(302, `${protocol}://${host}${pathOrUrl}`);
+    }
+    // Legacy Cloudinary public_id fallback
+    if (resume.cloudinary_public_id) {
+      const resourceType = resume.cloudinary_resource_type || 'raw';
+      const url = cloudinary.url(resume.cloudinary_public_id, {
+        resource_type: resourceType,
+        secure: true,
+      });
+      return res.redirect(302, url);
+    }
+    return res.status(404).json({ error: 'Resume file not available' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Hero Content API endpoints
@@ -930,28 +1022,28 @@ app.delete('/api/resume', authenticateToken, (req, res) => {
 app.get('/api/public/hero', (req, res) => {
   HeroContent.findOne().sort({ createdAt: -1 })
     .then(hero => {
-    if (!hero) {
-      return res.status(404).json({ error: 'No hero content found' });
-    }
-    res.json(hero);
+      if (!hero) {
+        return res.status(404).json({ error: 'No hero content found' });
+      }
+      res.json(hero);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Get hero content (protected)
 app.get('/api/hero', authenticateToken, (req, res) => {
   HeroContent.findOne().sort({ createdAt: -1 })
     .then(hero => {
-    if (!hero) {
-      return res.status(404).json({ error: 'No hero content found' });
-    }
-    res.json(hero);
+      if (!hero) {
+        return res.status(404).json({ error: 'No hero content found' });
+      }
+      res.json(hero);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Update hero content (protected)
@@ -960,12 +1052,12 @@ app.put('/api/hero', authenticateToken, upload.fields([
   { name: 'background_image', maxCount: 1 }
 ]), async (req, res) => {
   const { name, title, subtitle, description, github_url, linkedin_url, welcome_text } = req.body;
-  
+
   // Get the base URL dynamically
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.headers['x-forwarded-host'] || req.get('host');
   const baseUrl = `${protocol}://${host}`;
-  
+
   let updateData = { name, title, subtitle, description, github_url, linkedin_url, welcome_text };
 
   if (req.files?.profile_image) {
@@ -1002,7 +1094,7 @@ app.put('/api/hero', authenticateToken, upload.fields([
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // About Content API endpoints
@@ -1011,34 +1103,34 @@ app.put('/api/hero', authenticateToken, upload.fields([
 app.get('/api/public/about', (req, res) => {
   AboutContent.findOne().sort({ createdAt: -1 })
     .then(about => {
-    if (!about) {
-      return res.status(404).json({ error: 'No about content found' });
-    }
-    res.json(about);
+      if (!about) {
+        return res.status(404).json({ error: 'No about content found' });
+      }
+      res.json(about);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Get about content (protected)
 app.get('/api/about', authenticateToken, (req, res) => {
   AboutContent.findOne().sort({ createdAt: -1 })
     .then(about => {
-    if (!about) {
-      return res.status(404).json({ error: 'No about content found' });
-    }
-    res.json(about);
+      if (!about) {
+        return res.status(404).json({ error: 'No about content found' });
+      }
+      res.json(about);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Update about content (protected)
 app.put('/api/about', authenticateToken, (req, res) => {
   const { journey_title, journey_points, education_title, education_items, strengths_title, strengths_list } = req.body;
-  
+
   AboutContent.findOneAndUpdate({}, {
     journey_title,
     journey_points,
@@ -1048,7 +1140,7 @@ app.put('/api/about', authenticateToken, (req, res) => {
     strengths_list
   }, { new: true, upsert: true })
     .then(about => {
-        res.json({ message: 'About content updated successfully' });
+      res.json({ message: 'About content updated successfully' });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
@@ -1061,39 +1153,39 @@ app.put('/api/about', authenticateToken, (req, res) => {
 app.get('/api/public/contact', (req, res) => {
   ContactInfo.findOne().sort({ createdAt: -1 })
     .then(contact => {
-    if (!contact) {
-      return res.status(404).json({ error: 'No contact info found' });
-    }
-    res.json(contact);
+      if (!contact) {
+        return res.status(404).json({ error: 'No contact info found' });
+      }
+      res.json(contact);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Get contact info (protected)
 app.get('/api/contact-info', authenticateToken, (req, res) => {
   ContactInfo.findOne().sort({ createdAt: -1 })
     .then(contact => {
-    if (!contact) {
-      return res.status(404).json({ error: 'No contact info found' });
-    }
-    res.json(contact);
+      if (!contact) {
+        return res.status(404).json({ error: 'No contact info found' });
+      }
+      res.json(contact);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
-  });
+    });
 });
 
 // Update contact info (protected)
 app.put('/api/contact-info', authenticateToken, (req, res) => {
   const { title, subtitle, description, location, email, github_url, linkedin_url } = req.body;
-  
+
   ContactInfo.findOneAndUpdate({}, {
     title, subtitle, description, location, email, github_url, linkedin_url
   }, { new: true, upsert: true })
     .then(contact => {
-        res.json({ message: 'Contact info updated successfully' });
+      res.json({ message: 'Contact info updated successfully' });
     })
     .catch(err => {
       res.status(500).json({ error: err.message });
@@ -1108,19 +1200,19 @@ app.get('/api/health', (req, res) => {
 // Temporary endpoint to fix image URLs in production
 app.post('/api/fix-image-urls', (req, res) => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
-  
+
   console.log('🔧 Fixing image URLs with base URL:', baseUrl);
-  
+
   // Fix hero content
   // This section is no longer needed as hero content functionality is not in the new schema.
-    
-    // Fix projects
+
+  // Fix projects
   // This section is no longer needed as project functionality is not in the new schema.
-      
-      // Fix certifications
+
+  // Fix certifications
   // This section is no longer needed as certification functionality is not in the new schema.
-        
-        res.json({ 
+
+  res.json({
     message: 'Image URLs fix attempted (no image URLs to fix in new schema)',
     heroFixed: 0,
     totalFixed: 0

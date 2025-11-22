@@ -1,24 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { buildApiUrl, ENDPOINTS } from '../config/api';
 import SectionWrapper from './SectionWrapper';
+import { FaCode, FaServer, FaDatabase, FaTools, FaLayerGroup, FaBrain, FaNetworkWired, FaChartBar, FaGlobe, FaLaptopCode, FaCloud, FaMobileAlt, FaShieldAlt } from 'react-icons/fa';
 
-const categoryColors = {
-  Frontend: 'from-blue-100 to-cyan-100',
-  Backend: 'from-green-100 to-emerald-100',
-  Programming: 'from-purple-100 to-pink-100',
-  Database: 'from-orange-100 to-red-100',
-  Tools: 'from-gray-100 to-slate-100',
-  Other: 'from-slate-100 to-gray-50',
+const categoryIcons = {
+  'Machine Learning': <FaBrain className="text-purple-400" />,
+  'Deep Learning': <FaNetworkWired className="text-indigo-400" />,
+  'Data Science': <FaChartBar className="text-blue-400" />,
+  'Web Development': <FaGlobe className="text-cyan-400" />,
+  'Programming': <FaLaptopCode className="text-emerald-400" />,
+  'Tools & Platforms': <FaTools className="text-orange-400" />,
+  'Frontend': <FaCode className="text-blue-300" />,
+  'Backend': <FaServer className="text-green-400" />,
+  'Database': <FaDatabase className="text-yellow-400" />,
+  'Cloud': <FaCloud className="text-sky-400" />,
+  'Mobile': <FaMobileAlt className="text-pink-400" />,
+  'Security': <FaShieldAlt className="text-red-400" />,
+  'Tools': <FaTools className="text-gray-400" />,
+  'Other': <FaLayerGroup className="text-pink-400" />
 };
 
-const ringColors = {
-  Frontend: '#38bdf8',
-  Backend: '#22d3ee',
-  Programming: '#a78bfa',
-  Database: '#fbbf24',
-  Tools: '#64748b',
-  Other: '#a3a3a3',
+// 3D Tilt Card Component
+const TiltCard = ({ children, className }) => {
+  const ref = useRef(null);
+
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["15deg", "-15deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+  const handleMouseMove = (e) => {
+    const rect = ref.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXFromCenter = e.clientX - rect.left - width / 2;
+    const mouseYFromCenter = e.clientY - rect.top - height / 2;
+    x.set(mouseXFromCenter / width);
+    y.set(mouseYFromCenter / height);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      className={`relative ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
 };
 
 const Skills = () => {
@@ -54,49 +99,36 @@ const Skills = () => {
     return acc;
   }, {}) : {};
 
-  // Animated proficiency bar component
-  const AdvancedBar = ({ percent = 0, color = '#38bdf8' }) => {
-    // If percent is very low, show label outside the bar for readability
-    const showInside = percent > 15;
-    return (
-      <div className="relative w-full h-4 bg-gray-200 rounded-full overflow-visible shadow-sm">
-        <motion.div
-          className="absolute left-0 top-0 h-4 rounded-full"
-          style={{ background: color, boxShadow: '0 2px 8px 0 rgba(56,189,248,0.08)' }}
-          initial={{ width: 0 }}
-          animate={{ width: `${percent}%` }}
-          transition={{ duration: 1 }}
-        />
-        <motion.span
-          className={`absolute top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm transition-colors duration-300 select-none ${showInside ? 'text-white bg-black/60' : 'text-gray-700 bg-white/90 border border-gray-200'}`}
-          style={{
-            left: showInside ? `calc(${percent}% - 2.5rem)` : `calc(${percent}% + 0.5rem)`,
-            minWidth: '2.2rem',
-            zIndex: 2,
-            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)'
-          }}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-        >
-          {percent}%
-        </motion.span>
-      </div>
-    );
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { type: "spring", stiffness: 100, damping: 15 }
+    }
   };
 
   if (loading) {
     return (
-      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
-        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4 ">A comprehensive overview of my technical expertise and proficiency levels.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
-            <div className="animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-            </div>
+      <section className="py-20 w-screen min-h-[60vh] bg-gray-900 flex flex-col items-center justify-center" id="skills">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 bg-gray-800 rounded w-64 mb-4"></div>
+          <div className="h-4 bg-gray-800 rounded w-96 mb-12"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl px-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 bg-gray-800 rounded-2xl"></div>
+            ))}
           </div>
         </div>
       </section>
@@ -105,60 +137,136 @@ const Skills = () => {
 
   if (error) {
     return (
-      <section className="py-16 sm:py-20 lg:py-24 w-screen min-h-[80vh] bg-gradient-to-b from-white via-blue-50 to-white flex flex-col items-center" id="skills">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
-        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4">A comprehensive overview of my technical expertise and proficiency levels.</p>
-        <div className="w-full max-w-6xl flex flex-col gap-6 sm:gap-8 px-4 sm:px-6">
-          <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
-            <p className="text-red-500 text-center">{error}</p>
-          </div>
+      <section className="py-20 w-screen min-h-[60vh] bg-gray-900 flex flex-col items-center justify-center" id="skills">
+        <div className="text-red-400 bg-red-900/20 px-6 py-4 rounded-lg border border-red-500/30 backdrop-blur-sm">
+          <p>{error}</p>
         </div>
       </section>
     );
   }
 
   return (
-    <SectionWrapper id="skills" gradient="bg-gradient-to-b from-purple-100 via-blue-50 to-green-50">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-2 tracking-tight px-4">Technical Skills</h2>
-      <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl px-4 mx-auto">A comprehensive overview of my technical expertise and proficiency levels.</p>
-      <div className="w-full max-w-6xl flex flex-col gap-8 px-4 sm:px-6">
-        {Object.entries(skillsByCategory).map(([category, categorySkills], categoryIndex) => (
-          <motion.div
-            key={category}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: categoryIndex * 0.1 }}
-            className={`rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8 bg-gradient-to-br ${categoryColors[category] || 'from-slate-100 to-gray-50'}`}
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{category}</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {categorySkills.map((skill, skillIndex) => (
-                <motion.div
-                  key={skill.id || `${category}-${skill.name}-${skillIndex}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: (categoryIndex * 0.1) + (skillIndex * 0.05) }}
-                  className="relative group bg-white/90 rounded-xl p-6 border border-gray-100 hover:shadow-2xl transition-all duration-300 flex flex-col items-center justify-center"
-                >
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 text-center mb-3">{skill.name}</h4>
-                  <AdvancedBar percent={skill.proficiency} color={ringColors[category] || '#38bdf8'} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+    <SectionWrapper id="skills" className="bg-[#0f172a] py-24 relative overflow-hidden">
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-gray-900 to-gray-900"></div>
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-1/4 -left-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+          className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"
+        />
       </div>
-      {(!Array.isArray(skills) || skills.length === 0) && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔧</div>
-          <h3 className="text-xl font-medium text-gray-900 mb-2">No skills available</h3>
-          <p className="text-gray-600">Skills will be displayed here once added.</p>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="mb-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-block mb-4"
+          >
+            <span className="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-semibold tracking-wider uppercase">
+              Technical Proficiency
+            </span>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight"
+          >
+            Skills & <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Expertise</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed"
+          >
+            A comprehensive toolkit of modern technologies and frameworks I leverage to build scalable, high-performance intelligent solutions.
+          </motion.p>
         </div>
-      )}
+
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          {Object.entries(skillsByCategory).map(([category, categorySkills], index) => (
+            <TiltCard
+              key={category}
+              className="h-full"
+            >
+              <motion.div
+                variants={itemVariants}
+                className="h-full bg-gray-800/40 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 hover:border-purple-500/30 transition-colors duration-300 group shadow-lg hover:shadow-purple-500/10"
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                {/* 3D Floating Elements */}
+                <div
+                  className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors duration-500"
+                  style={{ transform: "translateZ(-20px)" }}
+                />
+
+                <div className="relative z-10" style={{ transform: "translateZ(20px)" }}>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3.5 bg-gray-900/50 rounded-xl border border-gray-700/50 group-hover:border-purple-500/50 group-hover:bg-purple-500/10 transition-all duration-300 shadow-inner">
+                      <div className="text-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                        {categoryIcons[category] || <FaLayerGroup className="text-gray-400" />}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-wide group-hover:text-purple-300 transition-colors">
+                      {category}
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    {categorySkills.map((skill, idx) => (
+                      <motion.div
+                        key={skill._id || idx}
+                        whileHover={{ scale: 1.1, z: 10 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative group/tag"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg blur opacity-0 group-hover/tag:opacity-50 transition-opacity duration-300" />
+                        <span className="relative block px-3 py-1.5 bg-gray-900/80 text-gray-300 text-sm font-medium rounded-lg border border-gray-700 group-hover/tag:border-transparent group-hover/tag:text-white transition-all duration-300 cursor-default">
+                          {skill.name}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </TiltCard>
+          ))}
+        </motion.div>
+
+        {(!Array.isArray(skills) || skills.length === 0) && (
+          <div className="text-center py-20">
+            <div className="inline-block p-4 rounded-full bg-gray-800/50 mb-4">
+              <FaLayerGroup className="text-4xl text-gray-600" />
+            </div>
+            <p className="text-gray-500 text-lg">No skills found.</p>
+          </div>
+        )}
+      </div>
     </SectionWrapper>
   );
 };
 
-export default Skills; 
+export default Skills;
