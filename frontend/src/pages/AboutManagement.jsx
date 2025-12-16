@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaProjectDiagram, 
-  FaCode, 
-  FaCertificate, 
-  FaEnvelope, 
+import {
+  FaProjectDiagram,
+  FaCode,
+  FaCertificate,
+  FaEnvelope,
   FaSignOutAlt,
   FaTachometerAlt,
   FaPlus,
@@ -18,10 +18,11 @@ import {
   FaUpload,
   FaFileAlt,
   FaUserCog,
-  FaUser
+  FaUser,
+  FaImage
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { buildApiUrl, getRequestConfig, ENDPOINTS } from '../config/api';
+import { buildApiUrl, getRequestConfig, getFormDataConfig, ENDPOINTS } from '../config/api';
 
 // Helper to safely parse JSON
 const safeJson = async (response) => {
@@ -36,8 +37,11 @@ const AboutManagement = () => {
     education_title: '',
     education_items: [],
     strengths_title: '',
-    strengths_list: []
+    strengths_list: [],
+    about_image: ''
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -54,11 +58,22 @@ const AboutManagement = () => {
       if (response.ok) {
         const data = await safeJson(response);
         setAboutContent(data);
+        if (data.about_image) {
+          setImagePreview(data.about_image);
+        }
       }
     } catch (err) {
       console.error('Error fetching about content:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -68,10 +83,29 @@ const AboutManagement = () => {
     setMessage('');
 
     try {
-      const response = await fetch(buildApiUrl(ENDPOINTS.ABOUT), getRequestConfig('PUT', aboutContent));
+      const formData = new FormData();
+      formData.append('journey_title', aboutContent.journey_title);
+      formData.append('journey_points', JSON.stringify(aboutContent.journey_points));
+      formData.append('education_title', aboutContent.education_title);
+      formData.append('education_items', JSON.stringify(aboutContent.education_items));
+      formData.append('strengths_title', aboutContent.strengths_title);
+      formData.append('strengths_list', JSON.stringify(aboutContent.strengths_list));
+
+      if (imageFile) {
+        formData.append('about_image', imageFile);
+      }
+
+      const response = await fetch(buildApiUrl(ENDPOINTS.ABOUT), {
+        ...getFormDataConfig('PUT'),
+        body: formData
+      });
 
       if (response.ok) {
+        const data = await safeJson(response);
         setMessage('About content updated successfully!');
+        if (data.about?.about_image) {
+          setAboutContent(prev => ({ ...prev, about_image: data.about.about_image }));
+        }
       } else {
         const error = await safeJson(response);
         setMessage(`Error: ${error.error}`);
@@ -109,7 +143,7 @@ const AboutManagement = () => {
   const updateJourneyPoint = (index, value) => {
     setAboutContent(prev => ({
       ...prev,
-      journey_points: prev.journey_points.map((item, i) => 
+      journey_points: prev.journey_points.map((item, i) =>
         i === index ? { ...item, point: value } : item
       )
     }));
@@ -132,7 +166,7 @@ const AboutManagement = () => {
   const updateEducationItem = (index, field, value) => {
     setAboutContent(prev => ({
       ...prev,
-      education_items: prev.education_items.map((item, i) => 
+      education_items: prev.education_items.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
       )
     }));
@@ -160,7 +194,7 @@ const AboutManagement = () => {
   const updateStrength = (index, field, value) => {
     setAboutContent(prev => ({
       ...prev,
-      strengths_list: prev.strengths_list.map((item, i) => 
+      strengths_list: prev.strengths_list.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
       )
     }));
@@ -198,7 +232,7 @@ const AboutManagement = () => {
           <p className="text-slate-600 text-sm sm:text-base lg:text-lg">Update your about section content and information</p>
         </div>
       </div>
-      
+
       {/* Alerts */}
       <AnimatePresence>
         {message && (
@@ -214,251 +248,276 @@ const AboutManagement = () => {
       </AnimatePresence>
 
       <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-        {/* Journey Section */}
-        <motion.div 
+        {/* Image Upload Section */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
             <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
-              <FaUser size={18} />
-              Journey Section
+              <FaImage size={18} />
+              Profile Image
             </h2>
           </div>
-          
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Journey Title *
+          <div className="p-6">
+            <div className="flex flex-col items-center gap-4 border-2 border-dashed border-gray-300 rounded-xl p-8 hover:bg-gray-50 transition-colors">
+              {imagePreview ? (
+                <div className="relative w-48 h-48 rounded-full overflow-hidden shadow-lg mb-4">
+                  <img src={imagePreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <FaUser size={40} className="text-gray-400" />
+                </div>
+              )}
+              <label className="cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2">
+                <FaUpload />
+                <span>Choose Image</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
               </label>
+              <p className="text-sm text-gray-500">Recommended: Square aspect ratio, max 5MB</p>
+            </div>
+          </div>
+        </motion.div>
+        {/* Journey Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
+              <FaBriefcase />
+              Journey
+            </h2>
+          </div>
+          <div className="p-4 sm:p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
               <input
                 type="text"
                 name="journey_title"
                 value={aboutContent.journey_title}
                 onChange={handleChange}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-sm sm:text-base"
-                placeholder="e.g., My Journey"
-                required
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="e.g. My Journey"
               />
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-slate-700">
-                  Journey Points
-                </label>
-                <button
-                  type="button"
-                  onClick={addJourneyPoint}
-                  className="flex items-center gap-1 border border-cyan-500 text-cyan-600 bg-white hover:bg-cyan-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
-                >
-                  <FaPlus size={14} />
-                  Add Point
-                </button>
-              </div>
-              
-              <div className="space-y-3">
-                {aboutContent.journey_points.map((point, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={point.point}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Journey Points</label>
+              <AnimatePresence>
+                {aboutContent.journey_points.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="flex gap-2"
+                  >
+                    <textarea
+                      value={item.point}
                       onChange={(e) => updateJourneyPoint(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-sm"
-                      placeholder="Enter journey point..."
+                      className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                      rows="2"
+                      placeholder="Share a milestone..."
                     />
                     <button
                       type="button"
                       onClick={() => removeJourneyPoint(index)}
-                      className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
-                      title="Remove"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors h-fit"
                     >
-                      <FaTrash size={14} />
+                      <FaTrash />
                     </button>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </AnimatePresence>
+              <button
+                type="button"
+                onClick={addJourneyPoint}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                <FaPlus size={12} /> Add Point
+              </button>
             </div>
           </div>
         </motion.div>
 
         {/* Education Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
             <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
-              <FaFileAlt size={18} />
-              Education Section
+              <FaGraduationCap />
+              Education
             </h2>
           </div>
-          
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="p-4 sm:p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Education Title *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
               <input
                 type="text"
                 name="education_title"
                 value={aboutContent.education_title}
                 onChange={handleChange}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
-                placeholder="e.g., Education"
-                required
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                placeholder="e.g. Education"
               />
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-slate-700">
-                  Education Items
-                </label>
-                <button
-                  type="button"
-                  onClick={addEducationItem}
-                  className="flex items-center gap-1 border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
-                >
-                  <FaPlus size={14} />
-                  Add Item
-                </button>
-              </div>
-              
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Education Items</label>
+              <AnimatePresence>
                 {aboutContent.education_items.map((item, index) => (
-                  <div key={index} className="border border-slate-200 rounded-lg p-3 sm:p-4 space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={item.institution}
-                        onChange={(e) => updateEducationItem(index, 'institution', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="Institution name..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeEducationItem(index)}
-                        className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
-                        title="Remove"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                    </div>
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="p-4 rounded-xl border border-gray-200 bg-gray-50/50 space-y-3 relative group"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => removeEducationItem(index)}
+                      className="absolute top-2 right-2 p-2 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                    <input
+                      type="text"
+                      value={item.institution}
+                      onChange={(e) => updateEducationItem(index, 'institution', e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                      placeholder="Institution Name"
+                    />
                     <textarea
                       value={item.details}
                       onChange={(e) => updateEducationItem(index, 'details', e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm resize-none"
-                      placeholder="Degree, year, details..."
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none"
+                      rows="2"
+                      placeholder="Details (Degree, Year, etc.)"
                     />
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </AnimatePresence>
+              <button
+                type="button"
+                onClick={addEducationItem}
+                className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium px-2 py-1 rounded-lg hover:bg-purple-50 transition-colors"
+              >
+                <FaPlus size={12} /> Add Education
+              </button>
             </div>
           </div>
         </motion.div>
 
         {/* Strengths Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
             <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-3">
-              <FaCode size={18} />
-              Strengths Section
+              <FaCode />
+              Strengths
             </h2>
           </div>
-          
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="p-4 sm:p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Strengths Title *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Section Title</label>
               <input
                 type="text"
                 name="strengths_title"
                 value={aboutContent.strengths_title}
                 onChange={handleChange}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm sm:text-base"
-                placeholder="e.g., My Strengths"
-                required
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                placeholder="e.g. Core Strengths"
               />
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-slate-700">
-                  Strengths List
-                </label>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">Strengths List</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <AnimatePresence>
+                  {aboutContent.strengths_list.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 border border-gray-200 group"
+                    >
+                      <input
+                        type="text"
+                        value={item.name || ''}
+                        onChange={(e) => updateStrength(index, 'name', e.target.value)}
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-700 placeholder-gray-400"
+                        placeholder="Strength..."
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={item.level || 80}
+                        onChange={(e) => updateStrength(index, 'level', e.target.value)}
+                        className="w-16 bg-white border border-gray-300 rounded px-1 py-0.5 text-xs text-center"
+                        title="Proficiency Level %"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeStrength(index)}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
                 <button
                   type="button"
                   onClick={addStrength}
-                  className="flex items-center gap-1 border border-green-500 text-green-600 bg-white hover:bg-green-50 font-medium px-3 py-1 rounded-lg text-sm shadow-sm transition"
+                  className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-2 text-gray-500 hover:border-emerald-500 hover:text-emerald-500 transition-all"
                 >
-                  <FaPlus size={14} />
-                  Add Strength
+                  <FaPlus size={12} /> Add Strength
                 </button>
-              </div>
-              
-              <div className="space-y-3">
-                {aboutContent.strengths_list.map((strength, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={strength.name}
-                      onChange={e => updateStrength(index, 'name', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
-                      placeholder="Enter strength..."
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={strength.level}
-                      onChange={e => updateStrength(index, 'level', Number(e.target.value))}
-                      className="w-20 px-2 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-sm"
-                      placeholder="Level %"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeStrength(index)}
-                      className="p-2 rounded-full border border-red-200 bg-white text-red-500 hover:bg-red-50 shadow-sm transition"
-                      title="Remove"
-                    >
-                      <FaTrash size={14} />
-                    </button>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Submit Button */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex justify-end"
-        >
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-4 pt-4 sticky bottom-6 z-20">
+          <Link
+            to="/admin"
+            className="px-6 py-2.5 rounded-xl text-gray-600 bg-white border border-gray-200 font-medium hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all"
+          >
+            Cancel
+          </Link>
           <button
             type="submit"
             disabled={saving}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:translate-y-[-1px] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <FaCheck />
+                Save Changes
+              </>
+            )}
           </button>
-        </motion.div>
+        </div>
       </form>
     </div>
   );
 };
 
-export default AboutManagement; 
+export default AboutManagement;

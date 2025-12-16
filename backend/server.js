@@ -165,6 +165,7 @@ const aboutContentSchema = new mongoose.Schema({
   education_items: [Object],
   strengths_title: { type: String, required: true },
   strengths_list: [String],
+  about_image: String,
 }, { timestamps: true });
 
 const AboutContent = mongoose.model('AboutContent', aboutContentSchema);
@@ -1128,21 +1129,41 @@ app.get('/api/about', authenticateToken, (req, res) => {
 });
 
 // Update about content (protected)
-app.put('/api/about', authenticateToken, (req, res) => {
+app.put('/api/about', authenticateToken, upload.single('about_image'), async (req, res) => {
   const { journey_title, journey_points, education_title, education_items, strengths_title, strengths_list } = req.body;
 
-  AboutContent.findOneAndUpdate({}, {
+  let updateData = {
     journey_title,
-    journey_points,
+    journey_points: journey_points ? JSON.parse(journey_points) : undefined,
     education_title,
-    education_items,
+    education_items: education_items ? JSON.parse(education_items) : undefined,
     strengths_title,
-    strengths_list
-  }, { new: true, upsert: true })
+    strengths_list: strengths_list ? JSON.parse(strengths_list) : undefined
+  };
+
+  // Remove undefined keys
+  Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+
+  if (req.file) {
+    try {
+      const result = await uploadBufferToCloudinary(req.file.buffer, {
+        resource_type: 'auto',
+        folder: 'about'
+      });
+      console.log('About image uploaded:', result.secure_url);
+      updateData.about_image = result.secure_url;
+    } catch (err) {
+      console.error('Error uploading about image to Cloudinary:', err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  AboutContent.findOneAndUpdate({}, updateData, { new: true, upsert: true })
     .then(about => {
-      res.json({ message: 'About content updated successfully' });
+      res.json({ message: 'About content updated successfully', about });
     })
     .catch(err => {
+      console.error('Error updating about content:', err);
       res.status(500).json({ error: err.message });
     });
 });
